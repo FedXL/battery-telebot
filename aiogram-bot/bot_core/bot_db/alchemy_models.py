@@ -63,16 +63,6 @@ class Seller(Base):
      user_telegram = relationship('UserTelegram', backref='seller_telegram')
      user_watsapp = relationship('UserWhatsApp', backref='seller_watsapp')
 
-# class Message(Base):
-#     __tablename__ = 'bot_message'
-#
-#     id = Column(Integer, primary_key=True)
-#     client_id = Column(Integer, ForeignKey('bot_client.id'), nullable=False)
-#     message = Column(Text, nullable=False, comment='Сообщение')
-#     created_at = Column(DateTime, default=datetime.utcnow, comment='Дата создания')
-#     client = relationship('Client', backref='messages')
-
-
 class ClientProfile(Base):
     __tablename__ = 'bot_clientprofile'
 
