@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  bot-telegram:
+    build:
+        context: .
+        dockerfile: Dockerfile.bot
+    command: python run_bot.py
+    volumes:
+      - ./.env:/app/.env
+
+    networks:
+      - battery_battery-net
+networks:
+  battery_battery-net:
+    external: true
