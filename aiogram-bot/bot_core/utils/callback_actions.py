@@ -17,6 +17,12 @@ class Calls:
 
     MAIN_MENU = "mainmenu"
 
+    LOTTERY_RESULTS = "lottery_results"
+    GO_TO_PROFILE = "go_to_profile"
+    REGISTRATION_BATTERY = "registration_battery"
+    HELP = "help"
+
+
 class CollectDataStates(StatesGroup):
     messages_on = State()
     messages_of = State()
