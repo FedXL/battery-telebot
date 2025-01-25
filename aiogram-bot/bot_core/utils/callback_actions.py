@@ -7,9 +7,11 @@ class Calls:
     ASK_ABOUT_LANGUAGE = "ask_about_language"
 
     RULES = "rules"
-    RULES_RUS = "rules_rus"
-    RULES_KAZ = "rules_kaz"
+    RULES_CLIENT = "rules_client"
+    RULES_SELLER = "rules_seller"
 
+    SellerClient_PLUS_RUS = "sellerclient_rus"
+    SellerClient_PLUS_KAZ = "sellerclient_kaz"
     SELLER_OR_CLIENT = "seller_or_client"
 
     SELLER_CHOICE = "mainmenu_seller"
@@ -21,6 +23,20 @@ class Calls:
     GO_TO_PROFILE = "go_to_profile"
     REGISTRATION_BATTERY = "registration_battery"
     HELP = "help"
+
+    CHANGE_LANGUAGE = 'profile_change_language'
+    CHANGE_LANGUAGE_RUS = 'change_language_rus'
+    CHANGE_LANGUAGE_KAZ = 'change_language_kaz'
+
+    class PROFILE:
+        COLLECT_DATA = 'profile_collect_data'
+        PHONE_COLLECT = 'profile_collect_phone'
+        NAME_COLLECT = 'profile_collect_name'
+        EMAIL_COLLECT = 'profile_collect_email'
+
+        class TRADING_POINT:
+            NAME = 'profile_collect_trading_point_name'
+            ADDRESS = 'profile_collect_trading_point_address'
 
 
 class CollectDataStates(StatesGroup):

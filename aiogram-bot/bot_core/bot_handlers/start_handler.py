@@ -1,3 +1,5 @@
+from typing import Union
+
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -6,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .main_menu_handler.main_menu_handler import main_menu
 from ..bot_db.db_handlers import check_user, create_user
-from ..create_bot import bot, bot_log
+from ..create_bot import bot, bot_log, dp
 from ..utils.callback_actions import Calls
 from ..utils.download_replies import BOT_REPLIES
 
@@ -52,46 +54,54 @@ def context_for_profile(client_or_seller:str,username:str,language:str) ->str:
         raise ValueError("Unknown user type")
     return greetings_text
 
-async def start_handler(message_or_callback: [types.Message or types.CallbackQuery], state: FSMContext,db: AsyncSession) -> None:
+def context_for_hello(username):
+    hello_text = f"{username}\n"
+    hello_text += BOT_REPLIES['hello_new_user_text']['kaz']
+    hello_text += '\n\n'
+    hello_text += BOT_REPLIES['hello_new_user_text']['rus']
+    return hello_text
+
+
+async def start_handler(message_or_callback: Union[types.Message,types.CallbackQuery], state: FSMContext,db: AsyncSession) -> None:
     bot_log.warning('START HANDLER!')
-    if isinstance(message_or_callback, types.Message):
+    hello_text = "Проверяю пользователя"
+    if isinstance(message_or_callback, types.CallbackQuery):
+
+        message = message_or_callback.message
+        message_answer = await bot.send_message(chat_id=message.chat.id, text=hello_text)
+        await message_or_callback.message.delete()
+    else:
         message: types.Message = message_or_callback
-
-        telegram_id = message.from_user.id
-        username= message.from_user.username
-        assert isinstance(username,str),f'username is not str {username}'
-        hello_text = "Проверяю пользователя"
         message_answer = await message.answer(hello_text)
-        is_user, profile_dict = await check_user(db=db, telegram_id=telegram_id)
 
-        if profile_dict and is_user:
-            bot_log.info(f"User+profile branch {profile_dict}/{is_user}")
-            language = profile_dict['language']
-            client_or_seller = profile_dict['client_or_seller']
-            profile_text = context_for_profile(client_or_seller=client_or_seller, username=username, language=language)
-            storage_dict = await state.get_data()
-            storage_dict['language'] = profile_dict['language']
-            storage_dict['client_or_seller'] = profile_dict['client_or_seller']
-            await state.set_data(storage_dict)
-            await main_menu(callback_or_message=message, state=state, db=db)
+    telegram_id = message.from_user.id
+    username = message.from_user.username
 
-        elif is_user:
-            bot_log.info(f"User branch {is_user}")
-            hello_text = f"{username}\n"
-            hello_text += BOT_REPLIES.get('hello_new_user_text','error').get('kaz')
-            hello_text += '\n\n'
-            hello_text += BOT_REPLIES.get('hello_new_user_text','error').get('rus')
-            keyboard = command_menu_kb()
-            await message_answer.edit_text(hello_text, reply_markup=keyboard)
-        else:
-            bot_log.info(f"Create new user branch {is_user}")
-            new_user = await create_user(telegram_id, username, db)
-            hello_text = f"{username}\n"
-            hello_text += BOT_REPLIES.get('hello_new_user_text', 'error').get('kaz')
-            hello_text += '\n\n'
-            hello_text += BOT_REPLIES.get('hello_new_user_text', 'error').get('rus')
-            keyboard = command_menu_kb()
-            await message_answer.edit_text(hello_text, reply_markup=keyboard)
+
+    is_user, profile_dict = await check_user(db=db, telegram_id=telegram_id)
+
+    if profile_dict and is_user:
+        bot_log.info(f"User+profile branch {profile_dict}/{is_user}")
+        language = profile_dict['language']
+        client_or_seller = profile_dict['client_or_seller']
+        profile_text = context_for_profile(client_or_seller=client_or_seller, username=username, language=language)
+        storage_dict = await state.get_data()
+        storage_dict['language'] = profile_dict['language']
+        storage_dict['client_or_seller'] = profile_dict['client_or_seller']
+        await state.set_data(storage_dict)
+        await main_menu(callback_or_message=message, state=state, db=db)
+        return
+    elif is_user:
+        bot_log.info(f"User branch {is_user}")
+    else:
+        bot_log.info(f"Create new user branch {is_user}")
+        new_user = await create_user(telegram_id, username, db)
+    hello_text = context_for_hello(username)
+    keyboard = command_menu_kb()
+    await message_answer.edit_text(hello_text, reply_markup=keyboard)
+    return
+
+
 
 router.callback_query.register(start_handler, F.data == Calls.START_MENU)
 router.message.register(start_handler, Command("start"))
