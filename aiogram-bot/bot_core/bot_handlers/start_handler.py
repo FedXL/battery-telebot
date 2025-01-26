@@ -65,6 +65,10 @@ def context_for_hello(username):
 async def start_handler(message_or_callback: Union[types.Message,types.CallbackQuery], state: FSMContext,db: AsyncSession) -> None:
     bot_log.warning('START HANDLER!')
     hello_text = "Проверяю пользователя"
+    data_state = await state.get_data()
+    await state.clear()
+    if data_state:
+        await state.update_data(data_state)
     if isinstance(message_or_callback, types.CallbackQuery):
 
         message = message_or_callback.message

@@ -6,31 +6,25 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot_core.bot_db.alchemy_models import UserTelegram, Client, Seller, ClientProfile, SellerProfile
+from bot_core.create_bot import bot_log
 from bot_core.utils.callback_actions import Calls
 
 
 async def check_user(telegram_id, db: AsyncSession) -> Union[bool, bool] or Union[bool, Dict[str, str]]:
-
     async with db.begin():
         telegram_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
         telegram_user = telegram_user.scalar_one_or_none()
         if not telegram_user:
             return False, False
-
         client = await db.execute(select(Client).filter(Client.user_telegram_id == telegram_user.telegram_id))
         client = client.scalar_one_or_none()
-
         seller = await db.execute(select(Seller).filter(Seller.user_telegram_id == telegram_user.telegram_id))
         seller = seller.scalar_one_or_none()
-
         if client and seller:
             raise Exception('User has both client and seller profiles')
-
         if not client and not seller:
             return True, False
-
         if client:
-
             client_or_seller='client'
             profile = await db.execute(select(ClientProfile).filter(ClientProfile.client_id == client.id))
         elif seller:
@@ -38,10 +32,18 @@ async def check_user(telegram_id, db: AsyncSession) -> Union[bool, bool] or Unio
             profile = await db.execute(select(SellerProfile).filter(SellerProfile.seller_id == seller.id))
 
         profile = profile.scalar_one_or_none()
+        is_full_profile = profile_completeness(profile=profile)
+        profile_dict = profile_to_dict(profile=profile)
         if not profile:
             raise Exception('User has client or seller but no profile')
-        profile_data_base = {'language':profile.language,'client_or_seller':client_or_seller}
+
+        profile_data_base = {'language': profile.language,
+                             'profile_data': profile_dict,
+                             'client_or_seller': client_or_seller,
+                             'profile_completeness': is_full_profile}
         return True, profile_data_base
+
+
 
 
 async def create_user(telegram_id, username, db: AsyncSession):
@@ -57,8 +59,43 @@ async def create_user(telegram_id, username, db: AsyncSession):
     return new_user
 
 
+def profile_completeness(profile: Union[ClientProfile, SellerProfile]) -> bool:
+    '''Надо для определения какой в меню профиля меню заказывать полное или урезанное'''
+    if isinstance(profile, ClientProfile):
+        bot_log.warning('CLIENT profile_completeness')
+        bot_log.info(f"Profile is full {profile.first_name} | {profile.second_name} | {profile.patronymic} | {profile.contact_phone} | {profile.contact_email}")
+        if profile.first_name and profile.second_name and profile.patronymic and profile.contact_phone and profile.contact_email:
+            bot_log.warning('CLIENT profile_completeness is full')
+            return True
+        else:
+            bot_log.warning('CLIENT profile_completeness is NOT full')
+            return False
+    elif isinstance(profile, SellerProfile):
+        bot_log.warning('SELLER profile_completeness')
+        bot_log.info(f"Profile is full {profile.first_name} | {profile.second_name} | {profile.patronymic} | {profile.company_address} | {profile.company_name} | {profile.contact_phone} | {profile.contact_email}")
+        if profile.first_name and profile.second_name and profile.patronymic and profile.company_address and profile.company_name and profile.contact_phone and profile.contact_email:
+            bot_log.warning('SELLER profile_completeness is full')
+            return True
+        else:
+            bot_log.warning('SELLER profile_completeness is NOT full')
+            return False
 
-
+def profile_to_dict(profile: Union[ClientProfile,SellerProfile]) -> dict:
+    profile_dict = {
+        'client_or_seller': 'client',
+        'phone_from_telegram': profile.phone_from_telegram,
+        'first_name': profile.first_name,
+        'second_name': profile.second_name,
+        'patronymic': profile.patronymic,
+        'contact_phone': profile.contact_phone,
+        'contact_email': profile.contact_email,
+        'language': profile.language
+    }
+    if isinstance(profile, SellerProfile):
+        profile_dict['client_or_seller'] = 'seller'
+        profile_dict['company_address'] = profile.company_address
+        profile_dict['company_name'] = profile.company_name
+    return profile_dict
 
 
 

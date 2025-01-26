@@ -53,14 +53,14 @@ async def ask_about_language(callback: types.CallbackQuery, state: FSMContext) -
     logging.info(f"ask_about_language {callback.from_user.username}")
     await callback.message.edit_text(text=create_replier_language_choice(callback.from_user.username),
                                   reply_markup=keyboard_menu_kb())
-    await state.set_state(CollectDataStates.messages_of)
+    # await state.set_state(CollectDataStates.messages_of)
 
 
 async def catch_language_choice_and_ask_about_seller_or_client(callback: types.CallbackQuery, state: FSMContext) -> None:
     bot_log.info(f'ASK ABOUT SELLER HANDLER')
     """Дальше спрашиваем юзер он продавец или покупатель"""
     await callback.answer('Ok')
-    await state.set_state(CollectDataStates.messages_of)
+    # await state.set_state(CollectDataStates.messages_of)
     if callback.data == Calls.SellerClient_PLUS_RUS:
         language = 'rus'
     elif callback.data == Calls.SellerClient_PLUS_KAZ:
@@ -81,7 +81,7 @@ async def catch_rules_and_ask_seller_or_buyer(callback: types.CallbackQuery, sta
     state_dict = await state.get_data()
     language = state_dict.get('language')
     await callback.answer('Ok')
-    await state.set_state(CollectDataStates.messages_of)
+    # await state.set_state(CollectDataStates.messages_of)
     if callback.data == Calls.RULES_CLIENT:
         text = BOT_REPLIES['rules_client_text'][language]
         action = Calls.CLIENT_CHOICE

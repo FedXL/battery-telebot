@@ -29,9 +29,9 @@ class Calls:
     CHANGE_LANGUAGE_KAZ = 'change_language_kaz'
 
     class PROFILE:
-        COLLECT_DATA = 'profile_collect_data'
-        PHONE_COLLECT = 'profile_collect_phone'
+        START_REGISTRATION = 'profile_collect_all_data'
         NAME_COLLECT = 'profile_collect_name'
+        PHONE_COLLECT = 'profile_collect_phone'
         EMAIL_COLLECT = 'profile_collect_email'
 
         class TRADING_POINT:
