@@ -135,7 +135,9 @@ async def create_profiles(db: AsyncSession,
             db.add(new_client_profile)
         else:
             return False, f'Непонятный callback_data {callback_data}'
+
     return True, 'Профиль создан'
+
 
 async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegram_id: int):
     async with db.begin():
@@ -144,7 +146,8 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
         if not existing_user:
             raise Exception('User not found')
         if state_data['client_or_seller'] == 'client':
-            existing_client = await db.execute(select(Client).filter(Client.user_telegram_id == existing_user.telegram_id))
+            existing_client = await db.execute(
+                select(Client).filter(Client.user_telegram_id == existing_user.telegram_id))
             client = existing_client.scalar_one_or_none()
             if not client:
                 raise Exception('Client not found')
@@ -161,7 +164,8 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
             profile.language = state_data['language']
 
         elif state_data['client_or_seller'] == 'seller':
-            existing_seller = await db.execute(select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
+            existing_seller = await db.execute(
+                select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
             seller = existing_seller.scalar_one_or_none()
             if not seller:
                 raise Exception('Seller not found')

@@ -1,7 +1,8 @@
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot_core.bot_db.db_handlers import save_profile_data_collected
@@ -14,31 +15,21 @@ router = Router()
 
 
 
-SURVEY_QUESTIONS_RUS = {
-    "first_name_collect": "Введите ваше имя",
-    "second_name_collect": "Введите вашу фамилию",
-    "patronymic_name_collect": "Введите ваше отчество",
-    "phone_collect": "Введите ваш номер телефона",
-    "email_collect": "Введите ваш email",
-    "trading_point_name_collect": "Введите название вашей торговой точки",
-    "trading_point_address_collect": "Введите адрес вашей торговой точки",
+Support = {
+    "first_name_collect",
+    "second_name_collect",
+    "patronymic_name_collect",
+    "phone_collect",
+    "email_collect",
+    "trading_point_name_collect",
+    "trading_point_address_collect"
 }
 
-SURVEY_QUESTIONS_KAZ = {
-    "first_name_collect": "Атыңызды енгізіңіз",
-    "second_name_collect": "Тегіңізді енгізіңіз",
-    "patronymic_name_collect": "Әкеңіздің атын енгізіңіз",
-    "phone_collect": "Телефон нөміріңізді енгізіңіз",
-    "email_collect": "Электрондық поштаңызды енгізіңіз",
-    "trading_point_name_collect": "Сауда нүктеңіздің атауын енгізіңіз",
-    "trading_point_address_collect": "Сауда нүктеңіздің мекенжайын енгізіңіз",
-}
+CallsForStartSurvey = (Calls.PROFILE.PHONE_COLLECT, Calls.PROFILE.NAME_COLLECT, Calls.PROFILE.EMAIL_COLLECT,
+                                Calls.PROFILE.TRADING_POINT.NAME, Calls.PROFILE.TRADING_POINT.ADDRESS)
 
-def get_ask_text(callback_data:str,language:str) -> str:
-    if language=='rus':
-        text=SURVEY_QUESTIONS_RUS[callback_data]
-    elif language=='kaz':
-        text=SURVEY_QUESTIONS_KAZ[callback_data]
+
+
 
 async def start_survey(callback: CallbackQuery, state: FSMContext) -> None:
     """Запуск опроса"""
@@ -58,6 +49,25 @@ async def start_survey(callback: CallbackQuery, state: FSMContext) -> None:
         kill_messages1 = [result.message_id]
         state_dict['kill_messages'] = kill_messages1
         await state.set_data(state_dict)
+    elif callback.data in  CallsForStartSurvey:
+        text = BOT_REPLIES['phone_collect'][language]
+        await callback.answer('Ok')
+        await callback.message.answer('Введите телефон')
+        bot_log.warning(f"CALLBACK DATA {callback.data}")
+        bot_log.warning(f"STATE DICT {state_dict}")
+
+
+
+        # if state_dict.get('client_or_seller') == 'seller':
+        #     await state.set_state(SurveyStates.phone_collect)
+        # else:
+        #     await state.set_state(SurveyLowStates.phone_collect)
+        # result = await callback.message.edit_text(text)
+        # kill_messages1 = [result.message_id]
+        # state_dict['kill_messages'] = kill_messages1
+        # await state.set_data(state_dict)
+
+
 
 async def catch_survey(message: Message,state:FSMContext):
     state_name = await state.get_state()
@@ -92,9 +102,7 @@ async def catch_survey(message: Message,state:FSMContext):
     else:
         full_states_group = SurveyLowStates
         replace_name = 'SurveyLowStates:'
-    states_dict = create_state_dict(full_states_group)
-    bot_log.info(states_dict)
-    next_state = states_dict[state_name]['next_state']
+
     if next_state is None:
         await state.set_state(SpecialStates.end_survey)
         return
@@ -106,14 +114,17 @@ async def end_survey(message: Message, state:FSMContext,db: AsyncSession):
     state_dict = await state.get_data()
     kill_list = state_dict.get('kill_messages')
     kill_list.append(message.message_id)
-    result = await message.answer('Спасибо за регистрацию')
+
     profile_dict = state_dict.get('profile')
     await save_profile_data_collected(state_data=state_dict,db=db,telegram_id=message.from_user.id)
     bot_log.info(state_dict)
-    kill_list.append(result.message_id)
     await kill_messages(message, killing_list=kill_list)
-    await state.set_state(SpecialStates.messages_of)
-
+    await state.clear()
+    builder = InlineKeyboardBuilder()
+    builder.add(types.InlineKeyboardButton(text="Назад", callback_data=Calls.GO_TO_PROFILE))
+    builder.adjust(1)
+    keyboard = builder.as_markup()
+    result = await message.answer('Спасибо за регистрацию',reply_markup=keyboard)
 
 
 router.callback_query.register(start_survey, F.data.in_([Calls.PROFILE.START_REGISTRATION,Calls.PROFILE.PHONE_COLLECT,

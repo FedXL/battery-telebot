@@ -102,7 +102,6 @@ class KeyboardBuilder:
 
 
 class TextBuilder:
-
     def __init__(self,language: str,seller_or_client: str,profile_completeness:bool):
         self.language = language
         self.seller_or_client = seller_or_client
@@ -174,4 +173,6 @@ async def profile_menu(callback: types.CallbackQuery , state: FSMContext, db: As
                                        )
     await callback.answer('Profile')
     await callback.message.edit_text(text=text, reply_markup=keyboard)
+
+
 router.callback_query.register(profile_menu, F.data == Calls.GO_TO_PROFILE,StateFilter(None))
