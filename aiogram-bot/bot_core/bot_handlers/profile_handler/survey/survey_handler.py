@@ -54,7 +54,7 @@ async def start_survey(callback: CallbackQuery, state: FSMContext) -> None:
         await callback.answer('Ok')
         await callback.message.answer('Введите телефон')
         bot_log.warning(f"CALLBACK DATA {callback.data}")
-        bot_log.warning(f"STATE DICT {state_dict}")
+
 
 
 
@@ -102,7 +102,9 @@ async def catch_survey(message: Message,state:FSMContext):
     else:
         full_states_group = SurveyLowStates
         replace_name = 'SurveyLowStates:'
-
+    states_dict = create_state_dict(full_states_group)
+    bot_log.info(states_dict)
+    next_state = states_dict[state_name]['next_state']
     if next_state is None:
         await state.set_state(SpecialStates.end_survey)
         return
