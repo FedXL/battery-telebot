@@ -14,14 +14,12 @@ async def load_replies():
     """Загрузить реплики из базы данных."""
     try:
         async with telegram_bot_session() as session:
-
             result = await session.execute(select(OnlyRelies))
             rows = result.scalars().all()
             BOT_REPLIES = {row.name: {'kaz': row.kaz, 'rus': row.rus} for row in rows}
-
             return True
     except Exception as e:
-        logging.error(f"Ошибка при загрузке реплик: {e}")
+        logging.error(f"Реплики не были загружены проверь соединение: {e}")
         return False
 
 

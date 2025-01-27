@@ -56,7 +56,6 @@ async def main_menu(callback_or_message: types.CallbackQuery | types.Message, st
             await create_profiles(db=db,rus_or_kaz=rus_or_kaz, telegram_id=callback_or_message.from_user.id,callback_data=callback_or_message.data)
         elif callback_or_message.data in (Calls.MAIN_MENU,):
             await callback_or_message.answer('Main menu')
-
         create_menu_main_kb(rus_or_kaz)
         await callback_or_message.message.edit_text(BOT_REPLIES['main_menu_text'][rus_or_kaz], reply_markup=create_menu_main_kb(rus_or_kaz))
     elif isinstance(callback_or_message, types.Message):
@@ -64,4 +63,4 @@ async def main_menu(callback_or_message: types.CallbackQuery | types.Message, st
         create_menu_main_kb(rus_or_kaz)
         await callback_or_message.answer(BOT_REPLIES['main_menu_text'][rus_or_kaz], reply_markup=create_menu_main_kb(rus_or_kaz))
 
-router.callback_query.register(main_menu, F.data.in_([Calls.CLIENT_CHOICE, Calls.SELLER_CHOICE, Calls.MAIN_MENU]))
+router.callback_query.register(main_menu, F.data.in_([Calls.CLIENT_CHOICE, Calls.SELLER_CHOICE, Calls.MAIN_MENU]), StateFilter(None))

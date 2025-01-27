@@ -42,3 +42,40 @@ class Calls:
 class CollectDataStates(StatesGroup):
     messages_on = State()
     messages_of = State()
+
+
+class SurveyStates(StatesGroup):
+    """Класс для хранения состояний"""
+    first_name_collect = State()
+    second_name_collect = State()
+    patronymic_name_collect = State()
+    phone_collect = State()
+    email_collect = State()
+    trading_point_name_collect = State()
+    trading_point_address_collect = State()
+
+class SurveyLowStates(StatesGroup):
+    first_name_collect = State()
+    second_name_collect = State()
+    patronymic_name_collect = State()
+    phone_collect = State()
+    email_collect = State()
+
+class StateNode:
+    pass
+
+class SpecialStates(SurveyStates):
+    end_survey = State()
+    messages_of = State()
+
+
+
+def create_state_dict(my_group):
+    states_list = [state.state for state in my_group]
+    states_dict = {}
+    for idx, state in enumerate(states_list):
+        next_state = states_list[idx + 1] if idx + 1 < len(states_list) else None
+        states_dict[state] = {"number": idx, 'next_state':next_state}
+    return states_dict
+
+

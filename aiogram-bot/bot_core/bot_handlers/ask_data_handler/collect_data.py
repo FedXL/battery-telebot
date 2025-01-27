@@ -97,7 +97,7 @@ async def catch_rules_and_ask_seller_or_buyer(callback: types.CallbackQuery, sta
 
 
 
-router.callback_query.register(ask_about_language, F.data == Calls.ASK_ABOUT_LANGUAGE)
-router.callback_query.register(catch_language_choice_and_ask_about_seller_or_client, F.data.in_([Calls.SellerClient_PLUS_KAZ,Calls.SellerClient_PLUS_RUS]),StateFilter(CollectDataStates.messages_of))
-router.callback_query.register(catch_rules_and_ask_seller_or_buyer,F.data.in_([Calls.RULES_CLIENT,Calls.RULES_SELLER]) , StateFilter(CollectDataStates.messages_of))
+router.callback_query.register(ask_about_language, F.data == Calls.ASK_ABOUT_LANGUAGE,StateFilter(None))
+router.callback_query.register(catch_language_choice_and_ask_about_seller_or_client, F.data.in_([Calls.SellerClient_PLUS_KAZ,Calls.SellerClient_PLUS_RUS]),StateFilter(None))
+router.callback_query.register(catch_rules_and_ask_seller_or_buyer,F.data.in_([Calls.RULES_CLIENT,Calls.RULES_SELLER]) , StateFilter(None))
 

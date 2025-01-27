@@ -136,3 +136,49 @@ async def create_profiles(db: AsyncSession,
         else:
             return False, f'Непонятный callback_data {callback_data}'
     return True, 'Профиль создан'
+
+async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegram_id: int):
+    async with db.begin():
+        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+        existing_user = existing_user.scalar_one_or_none()
+        if not existing_user:
+            raise Exception('User not found')
+        if state_data['client_or_seller'] == 'client':
+            existing_client = await db.execute(select(Client).filter(Client.user_telegram_id == existing_user.telegram_id))
+            client = existing_client.scalar_one_or_none()
+            if not client:
+                raise Exception('Client not found')
+            existing_profile = await db.execute(select(ClientProfile).filter(ClientProfile.client_id == client.id))
+            profile = existing_profile.scalar_one_or_none()
+            if not profile:
+                raise Exception('Profile not found')
+
+            profile.first_name = state_data['profile']['SurveyLowStates:first_name_collect']
+            profile.second_name = state_data['profile']['SurveyLowStates:second_name_collect']
+            profile.patronymic = state_data['profile']['SurveyLowStates:patronymic_name_collect']
+            profile.contact_phone = state_data['profile']['SurveyLowStates:phone_collect']
+            profile.contact_email = state_data['profile']['SurveyLowStates:email_collect']
+            profile.language = state_data['language']
+
+        elif state_data['client_or_seller'] == 'seller':
+            existing_seller = await db.execute(select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
+            seller = existing_seller.scalar_one_or_none()
+            if not seller:
+                raise Exception('Seller not found')
+            existing_profile = await db.execute(select(SellerProfile).filter(SellerProfile.seller_id == seller.id))
+            profile = existing_profile.scalar_one_or_none()
+            if not profile:
+                raise Exception('Profile not found')
+            profile.first_name = state_data['profile']['SurveyStates:first_name_collect']
+            profile.second_name = state_data['profile']['SurveyStates:second_name_collect']
+            profile.patronymic = state_data['profile']['SurveyStates:patronymic_name_collect']
+            profile.contact_phone = state_data['profile']['SurveyStates:phone_collect']
+            profile.contact_email = state_data['profile']['SurveyStates:email_collect']
+            profile.language = state_data['language']
+            profile.company_name = state_data['profile']['SurveyStates:trading_point_name_collect']
+            profile.company_address = state_data['profile']['SurveyStates:trading_point_address_collect']
+
+        else:
+            raise Exception('Unknown client_or_seller')
+    return True, 'Данные профиля сохранены'
+

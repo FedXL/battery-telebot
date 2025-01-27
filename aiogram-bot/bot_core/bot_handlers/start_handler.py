@@ -22,18 +22,7 @@ def command_menu_kb() -> types.InlineKeyboardMarkup:
     keyboard = builder.as_markup()
     return keyboard
 
-async def kill_state(message_or_callback, state: FSMContext) -> None:
-    """ в основном нужна что бы очищать с листа лишние сообщения,
-     что хранятся в state_data killing list"""
-    state_dict = await state.get_data()
-    killing_list = state_dict.get("killing_list", [])
-    if killing_list:
-        for message_id in killing_list:
-            try:
-                await bot.delete_message(chat_id=message_or_callback.from_user.id, message_id=message_id)
-            except:
-                print("message not found")
-    await state.clear()
+
 
 @router.message(Command("state"))
 async def state(message: types.Message, state: FSMContext) -> None:
@@ -69,7 +58,10 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
     await state.clear()
     if data_state:
         await state.update_data(data_state)
+
     if isinstance(message_or_callback, types.CallbackQuery):
+        # КААЛЛБЕЕЕК!
+        await state.set_state()
 
         message = message_or_callback.message
         message_answer = await bot.send_message(chat_id=message.chat.id, text=hello_text)
