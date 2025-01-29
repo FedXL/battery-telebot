@@ -1,11 +1,11 @@
+import random
 from datetime import datetime
 from typing import Union, Dict
-
-from aiogram import types
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from bot_core.bot_db.alchemy_models import UserTelegram, Client, Seller, ClientProfile, SellerProfile
+from bot_core.bot_db.alchemy_models import UserTelegram, Client, Seller, ClientProfile, SellerProfile, InvalidTry, \
+    Battery
 from bot_core.create_bot import bot_log
 from bot_core.utils.callback_actions import Calls
 
@@ -237,3 +237,47 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
             raise Exception('Unknown client_or_seller')
     return True, 'Данные профиля сохранены'
 
+async def add_invalid_try(db: AsyncSession, telegram_id: int,battery_number:str):
+    async with db.begin():
+        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+        existing_user = existing_user.scalar_one_or_none()
+        if not existing_user:
+            raise Exception('User not found')
+        new_try = InvalidTry(telegram_user_id=existing_user.telegram_id, number=battery_number)
+        db.add(new_try)
+        await db.commit()
+
+
+
+
+
+async def add_valid_battery(db: AsyncSession, telegram_id: str, data: dict):
+    async with db.begin():
+        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+        existing_user = existing_user.scalar_one_or_none()
+        if not existing_user:
+            raise Exception('User not found')
+
+        client = await db.execute(select(Client).filter(Client.user_telegram_id == existing_user.telegram_id))
+        client = client.scalar_one_or_none()
+        if not client:
+            raise Exception('Client not found')
+        location = data.get('location', {})
+        latitude = location.get('latitude', None)
+        longitude = location.get('longitude', None)
+
+        new_battery = Battery(
+            serial=data['serial'],
+            client_id=client.id,
+            latitude=latitude,
+            longitude=longitude,
+            confirmation_code=data['confirmation_code'],
+        )
+        db.add(new_battery)
+
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            return False
+    return True

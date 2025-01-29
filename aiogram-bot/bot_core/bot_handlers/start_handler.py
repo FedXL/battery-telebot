@@ -1,17 +1,24 @@
 from typing import Union
 from aiogram import Router, types, F
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.methods import delete_message
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from .main_menu_handler.main_menu_handler import main_menu
 from ..bot_db.db_handlers import check_user, create_user
 from ..create_bot import bot, bot_log, dp
-from ..utils.callback_actions import Calls
+from ..utils.callback_actions import Calls, SpecialStates
 from ..utils.download_replies import BOT_REPLIES
 
 router = Router()
+
+async def delete_message(message: types.Message) -> None:
+
+    await message.delete()
+
+
 
 def command_menu_kb() -> types.InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
@@ -80,6 +87,7 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
         storage_dict['language'] = profile_dict['language']
         storage_dict['client_or_seller'] = profile_dict['client_or_seller']
         await state.set_data(storage_dict)
+        await state.set_state(SpecialStates.messages_of)
         await message_answer.delete()
         await main_menu(callback_or_message=message, state=state, db=db)
         return
@@ -91,9 +99,11 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
     hello_text = context_for_hello(username)
     keyboard = command_menu_kb()
     await message_answer.answer(hello_text, reply_markup=keyboard)
+    await state.set_state(SpecialStates.messages_of)
     return
 
 
 
 router.callback_query.register(start_handler, F.data == Calls.START_MENU)
 router.message.register(start_handler, Command("start"))
+router.message.register(delete_message,StateFilter(SpecialStates.messages_of))

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot_core.bot_db.db_handlers import save_profile_data_collected
 from bot_core.bot_handlers.profile_handler.profile_handler import profile_menu
-from bot_core.utils.callback_actions import Calls
+from bot_core.utils.callback_actions import Calls, SpecialStates
 
 router = Router()
 
@@ -25,4 +25,4 @@ async def change_language_handler(callback: types.CallbackQuery, state: FSMConte
     await callback.message.answer('Язык изменен', reply_markup=keyboard)
     await callback.message.delete()
 
-router.callback_query.register(change_language_handler, F.data.in_([Calls.CHANGE_LANGUAGE_RUS,Calls.CHANGE_LANGUAGE_KAZ]), StateFilter(None))
+router.callback_query.register(change_language_handler, F.data.in_([Calls.CHANGE_LANGUAGE_RUS,Calls.CHANGE_LANGUAGE_KAZ]), StateFilter(SpecialStates.messages_of))

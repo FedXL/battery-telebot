@@ -1,27 +1,38 @@
-from aiogram import types, Router, F
+import asyncio
+import random
+
+from aiogram import types, Router, F, Bot
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
+from bot_core.bot_db.db_handlers import check_user, add_invalid_try, add_valid_battery
+from bot_core.create_bot import bot_log
+from bot_core.utils.callback_actions import Calls, SpecialStates
+from bot_core.utils.check_battery import valid_battery_code
+from bot_core.utils.download_replies import BOT_REPLIES
+from bot_core.utils.support_foo import delete_message_later
 
-from bot_core.bot_db.db_handlers import check_user
-from bot_core.utils.callback_actions import Calls
+
+class CatchBattery(StatesGroup):
+    """Стейты для регистрации аккумулятора"""
+    catch_location = State()
+    catch_image = State()
+    catch_battery = State()
 
 router = Router()
 
-# async def battery_catch_handler(callback: types.CallbackQuery, state: FSMContext, db:AsyncSession) -> None:
-#     state_dict = await state.get_data()
-#     seller_or_client = state_dict['client_or_seller']
-#     language = state_dict['language']
-#     builder = InlineKeyboardBuilder()
-#     builder2 = ReplyKeyboardBuilder()
-#     builder.add(types.InlineKeyboardButton(text="Назад", callback_data=Calls.MAIN_MENU,request_location=True))
-#     builder.adjust(1)
-#     keyboard = builder.as_markup()
-#     await callback.message.edit_text("Пожалуйста, поделитесь своей геолокацией:", reply_markup=keyboard)
+def comeback_to_main_menu_kb(language)->types.InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.add(types.InlineKeyboardButton(text=BOT_REPLIES['comeback'][language], callback_data=Calls.MAIN_MENU))
+    builder.adjust(1)
+    keyboard = builder.as_markup()
+    return keyboard
 
-async def catch_location(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession) -> None:
+
+async def start_battery_register_way(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession) -> None:
     """Обработчик регистрации аккумулятора с текстовой клавиатурой"""
     available, state_dict = await check_user(callback.from_user.id, db=db)
 
@@ -33,37 +44,101 @@ async def catch_location(callback: types.CallbackQuery, state: FSMContext, db: A
         return
     profile_completeness = state_dict['profile_completeness']
     if not profile_completeness:
-        await callback.answer("Для этого действия необходимо заполнить профиль")
+        await callback.answer("❌")
+        result = await callback.message.answer("Для этого действия необходимо заполнить профиль")
+        asyncio.create_task(delete_message_later(callback.bot, result.chat.id, result.message_id))
+        return
+    if state_dict['client_or_seller'] == 'seller':
+        await callback.answer("❌")
+        return
 
+    await callback.answer('ok')
+    language = state_dict['language']
     builder = ReplyKeyboardBuilder()
-    builder.button(text="Не буду делиться")
-    builder.button(text="Поделитесь местом где вы купили аккумулятор", request_location=True)
+    builder.button(text=BOT_REPLIES['no_location_button'][language])
+    builder.button(text=BOT_REPLIES['plz_location_button'][language], request_location=True)
     builder.adjust(1)
     keyboard = builder.as_markup(resize_keyboard=True)
 
     await callback.message.answer(
-        "Пожалуйста, выберите действие или поделитесь своей геолокацией:",
-        reply_markup=keyboard
-    )
+        text = BOT_REPLIES['plz_location_text'][language],
+        reply_markup=keyboard)
     await state.set_data(state_dict)
+    await state.set_state(CatchBattery.catch_location)
+
 
 async def location_catch_and_ask_about_number(message: types.Message, state: FSMContext) -> None:
-    """Обработчик получения геолокации"""
-    state_dict = await state.get_data()
+    """1) Получить геолокацию
+    2) Попросить чек"""
 
+    state_dict = await state.get_data()
+    bot_log.info(f"LOCATION CATCH HANDLER: {state_dict}")
     if message.location:
         await message.answer("Спасибо за геолокацию!", reply_markup=ReplyKeyboardRemove())
         state_dict['location'] = {'latitude': message.location.latitude, 'longitude': message.location.longitude}
     else:
-        await message.answer("Вы не поделились геолокацией", reply_markup=ReplyKeyboardRemove())
+        bot = message.bot
+        result = await message.answer("Вы не поделились геолокацией", reply_markup=ReplyKeyboardRemove())
+
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="Нету чека")
+    builder.adjust(1)
+    keyboard = builder.as_markup(resize_keyboard=True)
+
+    await message.answer('Еще поделитесь чеком пожалуйста если есть', reply_markup=keyboard)
+    await state.set_state(CatchBattery.catch_image)
+
+
+
+async def catch_image_and_ask_code(message: types.Message, state: FSMContext) -> None:
+    """Обработчик получения изображения"""
+    state_dict = await state.get_data()
+    bot_log.info(f'CATCH sales receipt HANDLER {state_dict}')
+    if message.photo:
+        await message.answer("Спасибо за фото!", reply_markup=ReplyKeyboardRemove())
+        state_dict['photo'] = message.photo[-1].file_id
+    else:
+        await message.answer("Вы не отправили фото", reply_markup=ReplyKeyboardRemove())
     await message.answer('Теперь введите номер аккумулятора')
+    await state.set_data(state_dict)
+    await state.set_state(CatchBattery.catch_battery)
 
 
+async def catch_battery_number_end(message: types.Message, state: FSMContext,db:AsyncSession) -> None:
+    """Обработчик получения номера аккумулятора"""
+    state_dict = await state.get_data()
+    state_dict['battery_number'] = message.text
+    await state.set_data(state_dict)
+    await message.answer('Спасибо за информацию!')
+    result,comment = valid_battery_code(message.text)
+    if result:
+        state_dict = {**state_dict, **result}
+        code = random.randint(100000, 999999)
+        state_dict['confirmation_code'] = code
+        await message.answer('Аккумулятор валиден')
+
+        result = await add_valid_battery(db=db, telegram_id=message.from_user.id, data=state_dict)
+
+        if result:
+            await message.answer('Аккумулятор успешно зарегистрирован')
+            await message.answer('Код регистрации покупки для продавца:' + str(code), reply_markup=comeback_to_main_menu_kb(state_dict['language']))
+        else:
+            await message.answer('Ошибка при регистрации аккумулятора', reply_markup=comeback_to_main_menu_kb(state_dict['language']))
+            context = state_dict.get('serial')
+            context += 'Скорее всего ввод номера который уже зарегистрирован'
+            await add_invalid_try(db=db, telegram_id=message.from_user.id, battery_number=context)
+        await state.set_state(SpecialStates.messages_of)
+    else:
+        text = f"{message.text} - {comment}"
+        text = text[:250]
+        await add_invalid_try(db=db,telegram_id=message.from_user.id, battery_number=text)
+        await message.answer('Наверное ошиблись, ещё раз попробуйте.')
 
 
+router.callback_query.register(start_battery_register_way, F.data == Calls.REGISTRATION_BATTERY, StateFilter(SpecialStates.messages_of))
+router.message.register(location_catch_and_ask_about_number, F.location, StateFilter(CatchBattery.catch_location))
+router.message.register(location_catch_and_ask_about_number, F.text, StateFilter(CatchBattery.catch_location))
+router.message.register(catch_image_and_ask_code, F.photo, StateFilter(CatchBattery.catch_image))
+router.message.register(catch_image_and_ask_code, F.text, StateFilter(CatchBattery.catch_image))
+router.message.register(catch_battery_number_end, F.text, StateFilter(CatchBattery.catch_battery))
 
-
-
-router.callback_query.register(catch_location, F.data==Calls.REGISTRATION_BATTERY, StateFilter(None))
-router.message.register(location_catch_and_ask_about_number, F.location, StateFilter(None))
-router.message.register(location_catch_and_ask_about_number, F.text, StateFilter(None))

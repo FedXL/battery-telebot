@@ -72,14 +72,14 @@ class SurveyLowStates(StatesGroup):
     phone_collect = State()
     email_collect = State()
 
+
 class StateNode:
     pass
+
 
 class SpecialStates(SurveyStates):
     end_survey = State()
     messages_of = State()
-
-
 
 
 class RegisterBattery(StatesGroup):

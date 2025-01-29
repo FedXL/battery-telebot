@@ -4,7 +4,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot_core.create_bot import bot_log
-from bot_core.utils.callback_actions import Calls, CollectDataStates
+from bot_core.utils.callback_actions import Calls, CollectDataStates, SpecialStates
 from bot_core.utils.download_replies import BOT_REPLIES
 
 router = Router()
@@ -129,9 +129,9 @@ async def catch_client_or_seller_and_ask_about_rules(callback: types.CallbackQue
 
 
 
-router.callback_query.register(ask_about_language, F.data == Calls.ASK_ABOUT_LANGUAGE,StateFilter(None))
-router.callback_query.register(catch_language_choice_and_ask_about_seller_or_client, F.data.in_([Calls.SellerClient_PLUS_KAZ,Calls.SellerClient_PLUS_RUS]),StateFilter(None))
-router.callback_query.register(confirm_choice, F.data.in_([Calls.ARE_U_SURE_SELLER, Calls.ARE_U_SURE_CLIENT]), StateFilter(None))
-router.callback_query.register(catch_client_or_seller_and_ask_about_rules, F.data.in_([Calls.RULES_CLIENT, Calls.RULES_SELLER]), StateFilter(None))
+router.callback_query.register(ask_about_language, F.data == Calls.ASK_ABOUT_LANGUAGE,StateFilter(SpecialStates.messages_of))
+router.callback_query.register(catch_language_choice_and_ask_about_seller_or_client, F.data.in_([Calls.SellerClient_PLUS_KAZ,Calls.SellerClient_PLUS_RUS]),StateFilter(SpecialStates.messages_of))
+router.callback_query.register(confirm_choice, F.data.in_([Calls.ARE_U_SURE_SELLER, Calls.ARE_U_SURE_CLIENT]), StateFilter(SpecialStates.messages_of))
+router.callback_query.register(catch_client_or_seller_and_ask_about_rules, F.data.in_([Calls.RULES_CLIENT, Calls.RULES_SELLER]), StateFilter(SpecialStates.messages_of))
 
 

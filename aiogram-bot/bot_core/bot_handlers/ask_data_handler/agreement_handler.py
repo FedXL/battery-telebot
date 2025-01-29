@@ -2,7 +2,7 @@ from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from bot_core.utils.callback_actions import Calls
+from bot_core.utils.callback_actions import Calls, SpecialStates
 from bot_core.utils.download_replies import BOT_REPLIES
 
 router = Router()
@@ -16,7 +16,7 @@ def create_agreement_kb(language) -> types.InlineKeyboardMarkup:
     keyboard = builder.as_markup()
     return keyboard
 
-def agreement_kb_again(language)->types.InlineKeyboardMarkup:
+def comeback_to_main_menu_kb(language)->types.InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.add(types.InlineKeyboardButton(text=BOT_REPLIES['comeback'][language], callback_data=Calls.MAIN_MENU))
     builder.adjust(1)
@@ -45,10 +45,10 @@ async def agreement_handler_foo(callback: types.CallbackQuery, state: FSMContext
     if callback.data == Calls.PROFILE.AGREEMENT:
         keyboard_inline_menu = create_agreement_kb(language)
     else:
-        keyboard_inline_menu = agreement_kb_again(language)
+        keyboard_inline_menu = comeback_to_main_menu_kb(language)
     await callback.message.edit_text(text, reply_markup=keyboard_inline_menu)
 
-router.callback_query.register(agreement_handler_foo, F.data==Calls.PROFILE.AGREEMENT, StateFilter(None))
-router.callback_query.register(agreement_handler_foo, F.data==Calls.AGREEMENT_WATCH, StateFilter(None))
-router.callback_query.register(agreement_handler_foo, F.data==Calls.RULES_WATCH, StateFilter(None))
-router.callback_query.register(agreement_handler_foo, F.data==Calls.GO_TO_FAQ, StateFilter(None))
+router.callback_query.register(agreement_handler_foo, F.data==Calls.PROFILE.AGREEMENT, StateFilter(SpecialStates.messages_of))
+router.callback_query.register(agreement_handler_foo, F.data==Calls.AGREEMENT_WATCH, StateFilter(SpecialStates.messages_of))
+router.callback_query.register(agreement_handler_foo, F.data==Calls.RULES_WATCH, StateFilter(SpecialStates.messages_of))
+router.callback_query.register(agreement_handler_foo, F.data==Calls.GO_TO_FAQ, StateFilter(SpecialStates.messages_of))

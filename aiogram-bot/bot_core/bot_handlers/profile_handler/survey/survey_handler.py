@@ -205,10 +205,11 @@ async def end_survey(message: Message, state:FSMContext, db: AsyncSession):
     await message.answer(BOT_REPLIES['data_received'][language], reply_markup=keyboard)
     await result.delete()
     await state.clear()
+    await state.set_state(SpecialStates.messages_of)
 
 router.callback_query.register(start_survey, F.data.in_([Calls.PROFILE.START_REGISTRATION,Calls.PROFILE.PHONE_COLLECT,
                                 Calls.PROFILE.NAME_COLLECT, Calls.PROFILE.EMAIL_COLLECT,
-                                Calls.PROFILE.TRADING_POINT.NAME, Calls.PROFILE.TRADING_POINT.ADDRESS]), StateFilter(None))
+                                Calls.PROFILE.TRADING_POINT.NAME, Calls.PROFILE.TRADING_POINT.ADDRESS]), StateFilter(SpecialStates.messages_of))
 router.message.register(catch_survey, StateFilter(SurveyStates, SurveyLowStates))
 router.message.register(end_survey, StateFilter(SpecialStates.end_survey))
 

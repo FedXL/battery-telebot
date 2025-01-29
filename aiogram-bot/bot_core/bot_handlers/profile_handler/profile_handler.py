@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot_core.bot_db.db_handlers import check_user
 from bot_core.create_bot import bot_log
-from bot_core.utils.callback_actions import Calls
+from bot_core.utils.callback_actions import Calls, SpecialStates
 from bot_core.utils.download_replies import BOT_REPLIES
 
 router = Router()
@@ -175,4 +175,4 @@ async def profile_menu(callback: types.CallbackQuery , state: FSMContext, db: As
     await callback.message.edit_text(text=text, reply_markup=keyboard)
 
 
-router.callback_query.register(profile_menu, F.data == Calls.GO_TO_PROFILE,StateFilter(None))
+router.callback_query.register(profile_menu, F.data == Calls.GO_TO_PROFILE,StateFilter(SpecialStates.messages_of))

@@ -1,4 +1,4 @@
-from sqlalchemy import  Column, Integer, String, BigInteger, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, BigInteger, Text, DateTime, ForeignKey, Float, func
 from sqlalchemy.orm import DeclarativeBase, relationship
 from datetime import datetime
 
@@ -98,3 +98,40 @@ class SellerProfile(Base):
     company_name = Column(String(255), nullable=True, comment='Название компании')
 
     seller = relationship('Seller', backref='profile')
+
+class Battery(Base):
+    __tablename__ = 'lottery_battery'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    serial = Column(String(255), unique=True, nullable=False, comment='Серийный номер')
+
+    client_id = Column(Integer, ForeignKey('bot_client.id'), nullable=False, comment='Клиент')
+    seller_id = Column(Integer, ForeignKey('bot_seller.id'), nullable=True, comment='Продавец')
+
+    created_at = Column(DateTime, default=datetime.utcnow, comment='Зарегистрирован')
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment='Последнее обновление')
+
+    latitude = Column(Float, nullable=True, comment='Широта')
+    longitude = Column(Float, nullable=True, comment='Долгота')
+
+    confirmation_code = Column(String(6), unique=True, nullable=True, comment='Код для продавца')
+    tech_message = Column(Text, nullable=True, comment='Техническое сообщение')
+
+    client = relationship('Client', backref='batteries')
+    seller = relationship('Seller', backref='batteries')
+
+    def __repr__(self):
+        return f"<Battery(serial={self.serial})>"
+
+
+class InvalidTry(Base):
+    __tablename__ = 'lottery_invalidtry'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    number = Column(String(255), unique=True, nullable=False)
+    telegram_user_id = Column(Integer, ForeignKey('bot_usertelegram.telegram_id'), nullable=False)
+    created_at = Column(DateTime, default=func.now())
+
+    def __str__(self):
+        return f"{self.telegram_user.username} - {self.number}"
+
