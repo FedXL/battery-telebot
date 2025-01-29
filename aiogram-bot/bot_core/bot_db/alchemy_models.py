@@ -114,6 +114,8 @@ class Battery(Base):
     latitude = Column(Float, nullable=True, comment='Широта')
     longitude = Column(Float, nullable=True, comment='Долгота')
 
+    invoice_telegram_id = Column(String(200), unique=False, nullable=True, comment='ID чека')
+
     confirmation_code = Column(String(6), unique=True, nullable=True, comment='Код для продавца')
     tech_message = Column(Text, nullable=True, comment='Техническое сообщение')
 

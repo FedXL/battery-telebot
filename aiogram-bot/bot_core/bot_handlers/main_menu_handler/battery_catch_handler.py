@@ -108,12 +108,13 @@ async def catch_battery_number_end(message: types.Message, state: FSMContext,db:
     """Обработчик получения номера аккумулятора"""
     state_dict = await state.get_data()
     state_dict['battery_number'] = message.text
+    language = state_dict['language']
     await state.set_data(state_dict)
     await message.answer('Спасибо за информацию!')
     result,comment = valid_battery_code(message.text)
     if result:
         state_dict = {**state_dict, **result}
-        code = random.randint(100000, 999999)
+        code = str(random.randint(100000, 999999))
         state_dict['confirmation_code'] = code
         await message.answer('Аккумулятор валиден')
 
@@ -129,10 +130,16 @@ async def catch_battery_number_end(message: types.Message, state: FSMContext,db:
             await add_invalid_try(db=db, telegram_id=message.from_user.id, battery_number=context)
         await state.set_state(SpecialStates.messages_of)
     else:
+
+        builder = ReplyKeyboardBuilder()
+        builder.button(text=BOT_REPLIES['to_main_menu_from_battery'][language])
+        builder.adjust(1)
+        keyboard = builder.as_markup(resize_keyboard=True)
+
         text = f"{message.text} - {comment}"
         text = text[:250]
         await add_invalid_try(db=db,telegram_id=message.from_user.id, battery_number=text)
-        await message.answer('Наверное ошиблись, ещё раз попробуйте.')
+        await message.answer('Наверное ошиблись, ещё раз попробуйте.',reply_markup=keyboard)
 
 
 router.callback_query.register(start_battery_register_way, F.data == Calls.REGISTRATION_BATTERY, StateFilter(SpecialStates.messages_of))

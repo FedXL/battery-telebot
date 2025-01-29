@@ -239,13 +239,20 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
 
 async def add_invalid_try(db: AsyncSession, telegram_id: int,battery_number:str):
     async with db.begin():
-        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
-        existing_user = existing_user.scalar_one_or_none()
-        if not existing_user:
-            raise Exception('User not found')
-        new_try = InvalidTry(telegram_user_id=existing_user.telegram_id, number=battery_number)
-        db.add(new_try)
-        await db.commit()
+        result = False
+        try:
+            existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+            existing_user = existing_user.scalar_one_or_none()
+            if not existing_user:
+                raise Exception('User not found')
+            new_try = InvalidTry(telegram_user_id=existing_user.telegram_id, number=battery_number)
+            db.add(new_try)
+            await db.commit()
+            result = True
+        except IntegrityError:
+            await db.rollback()
+        finally:
+            return result
 
 
 
@@ -272,6 +279,7 @@ async def add_valid_battery(db: AsyncSession, telegram_id: str, data: dict):
             latitude=latitude,
             longitude=longitude,
             confirmation_code=data['confirmation_code'],
+            invoice_telegram_id=data.get('photo',None),
         )
         db.add(new_battery)
 
@@ -280,4 +288,5 @@ async def add_valid_battery(db: AsyncSession, telegram_id: str, data: dict):
         except IntegrityError:
             await db.rollback()
             return False
+
     return True

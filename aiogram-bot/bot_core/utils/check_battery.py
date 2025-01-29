@@ -16,7 +16,7 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
 
     if  len_battery not in [11,12]:
         print(f'Не верная длинна кода {len_battery}')
-        return False
+        return False , "Длинна не верная у номера аккумулятора"
 
     if len_battery == 12:
         first_pref = battery_code[0]
