@@ -52,7 +52,7 @@ class KeyboardBuilder:
 
     def __create_basic_kb(self):
         builder = InlineKeyboardBuilder()
-        builder.add(types.InlineKeyboardButton(text=self.button_start_req, callback_data=Calls.PROFILE.START_REGISTRATION))
+        builder.add(types.InlineKeyboardButton(text=self.button_start_req, callback_data=Calls.PROFILE.AGREEMENT))
         builder.add(self.__language_choice_button())
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
         builder.adjust(1)

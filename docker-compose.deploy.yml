@@ -1,15 +1,10 @@
 version: '3.9'
 services:
   bot-telegram:
-    build:
-        context: .
-        dockerfile: Dockerfile.bot
+    image: fedxl/storage:battery-bot
     command: python run_bot.py
-
     volumes:
       - ./.env:/app/.env
-      - ./aiogram-bot:/app
-
     networks:
       - battery_battery-net
 networks:

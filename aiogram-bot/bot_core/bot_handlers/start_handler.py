@@ -1,11 +1,10 @@
 from typing import Union
-
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from .main_menu_handler.main_menu_handler import main_menu
 from ..bot_db.db_handlers import check_user, create_user
 from ..create_bot import bot, bot_log, dp
@@ -55,25 +54,21 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
     bot_log.warning('START HANDLER!')
     hello_text = "Проверяю пользователя"
     data_state = await state.get_data()
+
     await state.clear()
     if data_state:
         await state.update_data(data_state)
 
     if isinstance(message_or_callback, types.CallbackQuery):
-        # КААЛЛБЕЕЕК!
         await state.set_state()
-
         message = message_or_callback.message
-        message_answer = await bot.send_message(chat_id=message.chat.id, text=hello_text)
+        message_answer = await bot.send_message(chat_id=message.chat.id, text=hello_text,reply_markup=ReplyKeyboardRemove())
         await message_or_callback.message.delete()
     else:
         message: types.Message = message_or_callback
-        message_answer = await message.answer(hello_text)
-
+        message_answer = await message.answer(hello_text, reply_markup=ReplyKeyboardRemove())
     telegram_id = message.from_user.id
     username = message.from_user.username
-
-
     is_user, profile_dict = await check_user(db=db, telegram_id=telegram_id)
 
     if profile_dict and is_user:
@@ -85,6 +80,7 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
         storage_dict['language'] = profile_dict['language']
         storage_dict['client_or_seller'] = profile_dict['client_or_seller']
         await state.set_data(storage_dict)
+        await message_answer.delete()
         await main_menu(callback_or_message=message, state=state, db=db)
         return
     elif is_user:
@@ -94,7 +90,7 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
         new_user = await create_user(telegram_id, username, db)
     hello_text = context_for_hello(username)
     keyboard = command_menu_kb()
-    await message_answer.edit_text(hello_text, reply_markup=keyboard)
+    await message_answer.answer(hello_text, reply_markup=keyboard)
     return
 
 

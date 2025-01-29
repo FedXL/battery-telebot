@@ -11,6 +11,17 @@ from bot_core.utils.callback_actions import Calls
 
 
 async def check_user(telegram_id, db: AsyncSession) -> Union[bool, bool] or Union[bool, Dict[str, str]]:
+    """
+        Check if a user exists and has a profile.
+
+        Returns:
+            (bool, bool):
+                - (False, False) if user not found.
+                - (True, False) if user found but no profile.
+                - (True, Dict[str, str]) if user found and has profile.
+    """
+
+
     async with db.begin():
         telegram_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
         telegram_user = telegram_user.scalar_one_or_none()
@@ -121,6 +132,7 @@ async def create_profiles(db: AsyncSession,
             new_profile_seller = SellerProfile(seller_id=new_seller.id)
             new_profile_seller.language = rus_or_kaz
             db.add(new_profile_seller)
+
         elif callback_data == Calls.CLIENT_CHOICE:
             existing_seller = await db.execute(
                 select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
@@ -155,14 +167,30 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
             profile = existing_profile.scalar_one_or_none()
             if not profile:
                 raise Exception('Profile not found')
-
-            profile.first_name = state_data['profile']['SurveyLowStates:first_name_collect']
-            profile.second_name = state_data['profile']['SurveyLowStates:second_name_collect']
-            profile.patronymic = state_data['profile']['SurveyLowStates:patronymic_name_collect']
-            profile.contact_phone = state_data['profile']['SurveyLowStates:phone_collect']
-            profile.contact_email = state_data['profile']['SurveyLowStates:email_collect']
-            profile.language = state_data['language']
-
+            try:
+                profile.first_name = state_data['collected_data']['first_name_collect']
+            except:
+                pass
+            try:
+                profile.second_name = state_data['collected_data']['second_name_collect']
+            except:
+                pass
+            try:
+                profile.patronymic = state_data['collected_data']['patronymic_name_collect']
+            except:
+                pass
+            try:
+                profile.contact_phone = state_data['collected_data']['phone_collect']
+            except:
+                pass
+            try:
+                profile.contact_email = state_data['collected_data']['email_collect']
+            except:
+                pass
+            try:
+                profile.language = state_data['language']
+            except:
+                pass
         elif state_data['client_or_seller'] == 'seller':
             existing_seller = await db.execute(
                 select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
@@ -173,15 +201,38 @@ async def save_profile_data_collected(db: AsyncSession, state_data: dict, telegr
             profile = existing_profile.scalar_one_or_none()
             if not profile:
                 raise Exception('Profile not found')
-            profile.first_name = state_data['profile']['SurveyStates:first_name_collect']
-            profile.second_name = state_data['profile']['SurveyStates:second_name_collect']
-            profile.patronymic = state_data['profile']['SurveyStates:patronymic_name_collect']
-            profile.contact_phone = state_data['profile']['SurveyStates:phone_collect']
-            profile.contact_email = state_data['profile']['SurveyStates:email_collect']
-            profile.language = state_data['language']
-            profile.company_name = state_data['profile']['SurveyStates:trading_point_name_collect']
-            profile.company_address = state_data['profile']['SurveyStates:trading_point_address_collect']
-
+            try:
+                profile.first_name = state_data['collected_data']['first_name_collect']
+            except:
+                pass
+            try:
+                profile.second_name = state_data['collected_data']['second_name_collect']
+            except:
+                pass
+            try:
+                profile.patronymic = state_data['collected_data']['patronymic_name_collect']
+            except:
+                pass
+            try:
+                profile.contact_phone = state_data['collected_data']['phone_collect']
+            except:
+                pass
+            try:
+                profile.contact_email = state_data['collected_data']['email_collect']
+            except:
+                pass
+            try:
+                profile.language = state_data['language']
+            except:
+                pass
+            try:
+                profile.company_name = state_data['collected_data']['trading_point_name_collect']
+            except:
+                pass
+            try:
+                profile.company_address = state_data['collected_data']['trading_point_address_collect']
+            except:
+                pass
         else:
             raise Exception('Unknown client_or_seller')
     return True, 'Данные профиля сохранены'

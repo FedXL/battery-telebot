@@ -9,10 +9,16 @@ class Calls:
     RULES = "rules"
     RULES_CLIENT = "rules_client"
     RULES_SELLER = "rules_seller"
+    RULES_WATCH = 'rules_watch'
+
+    ARE_U_SURE_SELLER = 'are_u_sure_seller'
+    ARE_U_SURE_CLIENT = 'are_u_sure_client'
 
     SellerClient_PLUS_RUS = "sellerclient_rus"
     SellerClient_PLUS_KAZ = "sellerclient_kaz"
     SELLER_OR_CLIENT = "seller_or_client"
+
+
 
     SELLER_CHOICE = "mainmenu_seller"
     CLIENT_CHOICE = "mainmenu_client"
@@ -28,12 +34,17 @@ class Calls:
     CHANGE_LANGUAGE_RUS = 'change_language_rus'
     CHANGE_LANGUAGE_KAZ = 'change_language_kaz'
 
+    AGREEMENT_WATCH = 'agreement_watch'
+
+    GO_TO_FAQ = 'go_to_faq'
+
     class PROFILE:
         START_REGISTRATION = 'profile_collect_all_data'
         NAME_COLLECT = 'profile_collect_name'
         PHONE_COLLECT = 'profile_collect_phone'
         EMAIL_COLLECT = 'profile_collect_email'
-
+        GO_TO_PROFILE = 'go_to_profile'
+        AGREEMENT = 'agreement'
         class TRADING_POINT:
             NAME = 'profile_collect_trading_point_name'
             ADDRESS = 'profile_collect_trading_point_address'
@@ -70,12 +81,7 @@ class SpecialStates(SurveyStates):
 
 
 
-def create_state_dict(my_group):
-    states_list = [state.state for state in my_group]
-    states_dict = {}
-    for idx, state in enumerate(states_list):
-        next_state = states_list[idx + 1] if idx + 1 < len(states_list) else None
-        states_dict[state] = {"number": idx, 'next_state':next_state}
-    return states_dict
 
-
+class RegisterBattery(StatesGroup):
+    catch_location = State()
+    catch_battery = State()

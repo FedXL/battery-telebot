@@ -4,4 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 COPY req.txt .
 RUN pip install --no-cache-dir -r req.txt
-#COPY ./aiogram-bot /app
+# Даем права на выполнение для restart.sh
+
+COPY ./aiogram-bot /app
+RUN chmod +x /app/restart.sh
