@@ -18,9 +18,6 @@ class OnlyRelies(Base):
     def __repr__(self):
         return f"<Phrases(name={self.name})>"
 
-
-
-
 class UserTelegram(Base):
     __tablename__ = 'bot_usertelegram'
 
@@ -126,6 +123,21 @@ class Battery(Base):
         return f"<Battery(serial={self.serial})>"
 
 
+    def to_dict(self):
+        return {
+            'serial': self.serial,
+            'client_id': self.client_id,
+            'seller_id': self.seller_id,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'invoice_telegram_id': self.invoice_telegram_id,
+            'confirmation_code': self.confirmation_code,
+            'tech_message': self.tech_message
+        }
+
+
 class InvalidTry(Base):
     __tablename__ = 'lottery_invalidtry'
 
@@ -136,4 +148,21 @@ class InvalidTry(Base):
 
     def __str__(self):
         return f"{self.telegram_user.username} - {self.number}"
+
+
+
+
+class TelegramMessage(Base):
+    __tablename__ = 'lottery_telegrammessage'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    telegram_id = Column(Integer, ForeignKey('bot_usertelegram.telegram_id'), nullable=False)
+    message = Column(Text, nullable=False, comment='Сообщение')
+    created_at = Column(DateTime, default=datetime.utcnow, comment='Дата создания')
+
+
+    def __repr__(self):
+        return f"<TelegramMessage(message={self.message})>"
+
+
 

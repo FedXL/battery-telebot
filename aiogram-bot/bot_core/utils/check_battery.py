@@ -56,6 +56,33 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
 
 
 
+def valid_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dict[str, str], bool]:
+    """
+    Validate a 12-digit battery code based on the given criteria.
+    Args:
+        battery_code (str): The battery code to validate.
+    Returns:
+        bool: True if the battery code is valid, False otherwise.
+    """
+    battery_code = battery_code.strip(" ").replace('_','').replace("-", "").replace(" ", "").replace('.','').replace(',','').upper()
+    return_battery_number = battery_code
+    len_code = len(battery_code)
+
+    if len_code != 6:
+        return False, "Длинна не верная у номера кода"
+
+    try:
+        int(battery_code)
+    except ValueError:
+        return False, "Код должен быть числом"
+
+    return {'code': battery_code}, False
+
+
+
+
+
+
 if __name__ == '__main__':
     print('1')
     assert valid_battery_code('С42-001-3-01-001')[0] == {'capacity': '42', 'day': '001', 'year': '3', 'team': '01', 'number': '001'}

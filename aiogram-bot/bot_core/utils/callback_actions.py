@@ -6,6 +6,12 @@ class Calls:
     START_MENU = 'start_menu'
     ASK_ABOUT_LANGUAGE = "ask_about_language"
 
+    CATCH_MESSAGE = "catch_message"
+
+
+    MY_BATTERY_LIST = "my_battery_list"
+    MY_SELLER_LIST = "my_seller_list"
+
     RULES = "rules"
     RULES_CLIENT = "rules_client"
     RULES_SELLER = "rules_seller"
@@ -28,6 +34,7 @@ class Calls:
     LOTTERY_RESULTS = "lottery_results"
     GO_TO_PROFILE = "go_to_profile"
     REGISTRATION_BATTERY = "registration_battery"
+    REGISTRATION_CODE = 'registration_code'
     HELP = "help"
 
     CHANGE_LANGUAGE = 'profile_change_language'
@@ -81,7 +88,19 @@ class SpecialStates(SurveyStates):
     end_survey = State()
     messages_of = State()
 
+    messanger = State()
 
 class RegisterBattery(StatesGroup):
     catch_location = State()
     catch_battery = State()
+
+class CatchBattery(StatesGroup):
+    """Стейты для регистрации аккумулятора"""
+    catch_location = State()
+    catch_image = State()
+    catch_battery = State()
+
+class CatchCode(StatesGroup):
+    start = State()
+    catch_code = State()
+    end = State()

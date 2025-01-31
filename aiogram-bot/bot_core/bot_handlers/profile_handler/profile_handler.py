@@ -41,10 +41,10 @@ class KeyboardBuilder:
 
     def __language_choice_button(self):
         if self.language == 'rus':
-            rep=BOT_REPLIES['change_language_profile']['kaz']
+            rep=BOT_REPLIES['change_language_profile'][self.language]
             return types.InlineKeyboardButton(text=rep, callback_data=Calls.CHANGE_LANGUAGE_RUS)
         elif self.language == 'kaz':
-            rep=BOT_REPLIES['change_language_profile']['rus']
+            rep=BOT_REPLIES['change_language_profile'][self.language]
             return types.InlineKeyboardButton(text=rep, callback_data=Calls.CHANGE_LANGUAGE_KAZ)
         else:
             raise ValueError("Unknown language")
@@ -52,7 +52,8 @@ class KeyboardBuilder:
 
     def __create_basic_kb(self):
         builder = InlineKeyboardBuilder()
-        builder.add(types.InlineKeyboardButton(text=self.button_start_req, callback_data=Calls.PROFILE.AGREEMENT))
+        builder.add(types.InlineKeyboardButton(text=self.button_start_req,
+                                               callback_data=Calls.PROFILE.START_REGISTRATION))
         builder.add(self.__language_choice_button())
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
         builder.adjust(1)
@@ -65,6 +66,8 @@ class KeyboardBuilder:
         builder.add(types.InlineKeyboardButton(text=self.button_phone, callback_data=Calls.PROFILE.PHONE_COLLECT))
         builder.add(types.InlineKeyboardButton(text=self.button_email, callback_data=Calls.PROFILE.EMAIL_COLLECT))
         builder.add(self.__language_choice_button())
+        builder.add(types.InlineKeyboardButton(text=self.button_client_list,
+                                               callback_data=Calls.MY_SELLER_LIST))
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
         builder.adjust(2)
         keyboard = builder.as_markup()
@@ -78,27 +81,24 @@ class KeyboardBuilder:
         builder.add(types.InlineKeyboardButton(text=self.button_trade_point_name, callback_data=Calls.PROFILE.TRADING_POINT.NAME))
         builder.add(types.InlineKeyboardButton(text=self.button_trade_point_address, callback_data=Calls.PROFILE.TRADING_POINT.ADDRESS))
         builder.add(self.__language_choice_button())
+        builder.add(types.InlineKeyboardButton(text=self.button_seller_list,callback_data=Calls.MY_SELLER_LIST))
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
         builder.adjust(2)
         keyboard = builder.as_markup()
         return keyboard
 
-
     def __collect_button_texts(self):
         language = self.language
         self.button_start_req = BOT_REPLIES['profile_registration_button'][language]
-        if language == 'rus':
-            self.button_language = BOT_REPLIES['change_language_profile']['kaz']
-        elif language == 'kaz':
-            self.button_language = BOT_REPLIES['change_language_profile']['rus']
-
+        self.button_language = BOT_REPLIES['change_language_profile'][language]
+        self.button_seller_list = BOT_REPLIES['seller_battery_list_button'][language]
+        self.button_client_list = BOT_REPLIES['client_battery_list_button'][language]
         self.button_comeback = BOT_REPLIES['comeback'][language]
         self.button_full_name = BOT_REPLIES['profile_full_name'][language]
         self.button_phone = BOT_REPLIES['profile_phone'][language]
         self.button_email = BOT_REPLIES['profile_email'][language]
         self.button_trade_point_name = BOT_REPLIES['trade_point_name'][language]
         self.button_trade_point_address = BOT_REPLIES['trade_point_address'][language]
-
 
 
 class TextBuilder:
@@ -157,7 +157,6 @@ async def profile_menu(callback: types.CallbackQuery , state: FSMContext, db: As
     profile_completeness = result_dict['profile_completeness']
     profile_data = result_dict['profile_data']
     await state.set_data(result_dict)
-
     bot_log.info(f"PROFILE MENU HANDLER {rus_or_kaz} | {seller_or_client} | {profile_completeness}")
     keyboard = KeyboardBuilder(language=rus_or_kaz, client_or_seller=seller_or_client, config=profile_completeness).create_kb
     TextConstrutor = TextBuilder(language=rus_or_kaz,seller_or_client=seller_or_client,profile_completeness=profile_completeness)

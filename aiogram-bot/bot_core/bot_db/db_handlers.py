@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot_core.bot_db.alchemy_models import UserTelegram, Client, Seller, ClientProfile, SellerProfile, InvalidTry, \
-    Battery
+    Battery, TelegramMessage
 from bot_core.create_bot import bot_log
 from bot_core.utils.callback_actions import Calls
 
@@ -254,7 +254,54 @@ async def add_invalid_try(db: AsyncSession, telegram_id: int,battery_number:str)
         finally:
             return result
 
+async def get_battery_by_client_telegram_id(db: AsyncSession, telegram_id: int):
+    bot_log.warning('START TO GET BATTERY from Client')
+    async with db.begin():
+        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+        existing_user = existing_user.scalar_one_or_none()
+        if not existing_user:
+            raise Exception('User not found')
+        client = await db.execute(select(Client).filter(Client.user_telegram_id == existing_user.telegram_id))
+        client = client.scalar_one_or_none()
+        if not client:
+            raise Exception('Client not found')
+        batterys = await db.execute(select(Battery).filter(Battery.client_id == client.id))
+        batterys = batterys.scalars().all()
+        if not batterys:
+            return
+        result_dict= {}
+        for num,battery in enumerate(batterys,1):
+            result_dict[num] = battery.to_dict()
+        return result_dict
 
+
+async def get_battery_by_seller_telegram_id(db: AsyncSession, telegram_id: int):
+    bot_log.warning('START TO GET BATTERY from Seller')
+    async with db.begin():
+
+        existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+        existing_user = existing_user.scalar_one_or_none()
+
+        if not existing_user:
+            raise Exception('User not found')
+
+        seller = await db.execute(select(Seller).filter(Seller.user_telegram_id == existing_user.telegram_id))
+        seller = seller.scalar_one_or_none()
+
+        if not seller:
+            raise Exception('Client not found')
+
+        batterys = await db.execute(select(Battery).filter(Battery.seller_id == seller.id))
+        batterys = batterys.scalars().all()
+
+        if not batterys:
+            return
+
+        result_dict= {}
+
+        for num, battery in enumerate(batterys, 1):
+            result_dict[num] = battery.to_dict()
+        return result_dict
 
 
 
@@ -282,7 +329,6 @@ async def add_valid_battery(db: AsyncSession, telegram_id: str, data: dict):
             invoice_telegram_id=data.get('photo',None),
         )
         db.add(new_battery)
-
         try:
             await db.commit()
         except IntegrityError:
@@ -290,3 +336,47 @@ async def add_valid_battery(db: AsyncSession, telegram_id: str, data: dict):
             return False
 
     return True
+
+async def get_battery_by_code(db: AsyncSession, code: str):
+    async with db.begin():
+        battery = await db.execute(select(Battery).filter(Battery.confirmation_code == code))
+        battery = battery.scalar_one_or_none()
+        if not battery:
+            return
+        return battery.to_dict()
+
+
+async def connect_battery_from_code_to_seller(db: AsyncSession, code: str, seller_telegram_id: int) -> bool:
+    async with db.begin():
+        result = await db.execute(
+            select(Seller)
+            .join(UserTelegram, Seller.user_telegram_id == UserTelegram.telegram_id)
+            .filter(UserTelegram.telegram_id == seller_telegram_id))
+        seller = result.scalar_one_or_none()
+        if not seller:
+            return False
+        battery = await db.scalar(select(Battery).filter_by(confirmation_code=code))
+        if not battery:
+            return False
+        if battery.seller_id:
+            return False
+        battery.seller_id = seller.id
+        battery.confirmation_code = None
+        await db.commit()
+    return True
+
+async def add_message(db: AsyncSession, message: str, telegram_id: int):
+    async with db.begin():
+        try:
+            existing_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
+            existing_user = existing_user.scalar_one_or_none()
+            new_message = TelegramMessage(telegram_id=existing_user.telegram_id, message=message)
+            db.add(new_message)
+            await db.commit()
+            result=True
+        except Exception as error:
+            bot_log.error(f'Error in add_message {error}')
+            await db.rollback()
+            result=False
+        finally:
+            return result

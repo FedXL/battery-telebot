@@ -1,11 +1,7 @@
 version: '3.9'
 services:
   bot-telegram:
-    build:
-        context: .
-        dockerfile: Dockerfile.bot
-    command: python run_bot.py
-
+    build: .
     volumes:
       - ./.env:/app/.env
       - ./aiogram-bot:/app
