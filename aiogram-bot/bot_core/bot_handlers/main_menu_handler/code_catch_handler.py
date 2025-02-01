@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot_core.bot_db.db_handlers import check_user, get_battery_by_code, connect_battery_from_code_to_seller
 from bot_core.utils.callback_actions import CatchBattery, CatchCode, Calls, SpecialStates
 from bot_core.utils.check_battery import valid_code
+from bot_core.utils.download_replies import BOT_REPLIES
 from bot_core.utils.support_foo import delete_message_later, comeback_to_main_menu_kb, back_to_main_menu_kb
 
 router = Router()
@@ -34,7 +35,7 @@ async def start_code_catch_for_seller(callback: types.CallbackQuery, state: FSMC
     await callback.answer('ok')
     language = state_dict['language']
     keyboard_reply=back_to_main_menu_kb(language)
-    text = "Введите 6-ти значный код для регистрации аккумулятора"
+    text = BOT_REPLIES['code_ask_text'][language]
     await callback.message.delete()
     result = await callback.message.answer(text = text, reply_markup=keyboard_reply)
     state_dict['kill_message'].append(result.message_id)
@@ -54,16 +55,16 @@ async def catch_code(message: types.Message, state: FSMContext, db:AsyncSession)
     is_valid, comment = valid_code(text)
 
     if is_valid:
-        mes=await message.answer('код принят ищу батарею')
+        # mes=await message.answer('код принят ищу батарею')
         battery = await get_battery_by_code(db=db,code=is_valid['code'])
-        await mes.delete()
+        # await mes.delete()
         if battery:
             mes=await message.answer(f"Аккумулятор найден: {battery.get('serial')}", reply_markup=back_to_main_menu_kb(language))
             state_dict['kill_message'].append(mes.message_id)
             result = await connect_battery_from_code_to_seller(db=db, code=is_valid['code'], seller_telegram_id=message.from_user.id)
-            await message.answer(f"Продажа успешно зарегистрированная", reply_markup=comeback_to_main_menu_kb(language))
+            await message.answer(BOT_REPLIES['code_success_registration'][language], reply_markup=comeback_to_main_menu_kb(language))
         else:
-            mes = await message.reply(f"По такому коду не зарегистрирован ни один аккумулятор", reply_markup=back_to_main_menu_kb(language))
+            mes = await message.reply(BOT_REPLIES['code_registration_fail'][language], reply_markup=back_to_main_menu_kb(language))
             state_dict['kill_message'].append(mes.message_id)
     else:
         mes=await message.reply(comment, reply_markup=back_to_main_menu_kb(language))

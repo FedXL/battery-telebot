@@ -40,8 +40,9 @@ def seller_or_client_keyboard(language):
     builder = InlineKeyboardBuilder()
     seller_text = BOT_REPLIES["seller_button"][language]
     client_text = BOT_REPLIES["client_button"][language]
-    builder.add(types.InlineKeyboardButton(text=seller_text, callback_data=Calls.ARE_U_SURE_SELLER),
-                types.InlineKeyboardButton(text=client_text, callback_data=Calls.ARE_U_SURE_CLIENT))
+    builder.add(
+                types.InlineKeyboardButton(text=client_text, callback_data=Calls.ARE_U_SURE_CLIENT),
+                types.InlineKeyboardButton(text=seller_text, callback_data=Calls.ARE_U_SURE_SELLER))
     builder.adjust(2)
     keyboard = builder.as_markup()
     return keyboard
@@ -70,7 +71,7 @@ async def catch_language_choice_and_ask_about_seller_or_client(callback: types.C
     state_data['language'] = language
     await state.set_data(state_data)
     keyboard = seller_or_client_keyboard(language)
-    seller_or_client_text = BOT_REPLIES.get("seller_or_client").get(language)
+    seller_or_client_text = BOT_REPLIES["seller_or_client"][language]
     await callback.message.edit_text(seller_or_client_text, reply_markup=keyboard)
 
 
@@ -89,7 +90,6 @@ async def confirm_choice (callback: types.CallbackQuery, state: FSMContext) -> N
         action_go = Calls.RULES_CLIENT
     else:
         raise ValueError("Unknown user type")
-
     if language == 'rus':
         action_comeback=Calls.SellerClient_PLUS_RUS
     elif language == 'kaz':
@@ -112,13 +112,13 @@ async def catch_client_or_seller_and_ask_about_rules(callback: types.CallbackQue
     language = state_dict.get('language')
     await callback.answer('Ok')
     if callback.data == Calls.RULES_CLIENT:
-        state_dict['seller_or_client'] = 'client'
+        state_dict['client_or_seller'] = 'client'
         text = BOT_REPLIES['rules_client_text'][language]
         action = Calls.CLIENT_CHOICE
     elif callback.data == Calls.RULES_SELLER:
         text = BOT_REPLIES['rules_seller_text'][language]
         action = Calls.SELLER_CHOICE
-        state_dict['seller_or_client'] = 'seller'
+        state_dict['client_or_seller'] = 'seller'
     else:
         raise ValueError("Unknown user type")
     keyboard = yes_no_buttons(yes_action=action, no_action=Calls.START_MENU, language=language)

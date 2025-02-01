@@ -22,7 +22,7 @@ class Calls:
 
     SellerClient_PLUS_RUS = "sellerclient_rus"
     SellerClient_PLUS_KAZ = "sellerclient_kaz"
-    SELLER_OR_CLIENT = "seller_or_client"
+    SELLER_OR_CLIENT = "client_or_seller"
 
 
 
@@ -96,7 +96,7 @@ class RegisterBattery(StatesGroup):
 
 class CatchBattery(StatesGroup):
     """Стейты для регистрации аккумулятора"""
-    catch_location = State()
+    # catch_location = State()
     catch_image = State()
     catch_battery = State()
 

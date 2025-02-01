@@ -21,7 +21,7 @@ async def check_user(telegram_id, db: AsyncSession) -> Union[bool, bool] or Unio
                 - (True, Dict[str, str]) if user found and has profile.
     """
 
-
+    bot_log.info(f'Checking user {telegram_id}')
     async with db.begin():
         telegram_user = await db.execute(select(UserTelegram).filter(UserTelegram.telegram_id == telegram_id))
         telegram_user = telegram_user.scalar_one_or_none()
@@ -36,26 +36,41 @@ async def check_user(telegram_id, db: AsyncSession) -> Union[bool, bool] or Unio
         if not client and not seller:
             return True, False
         if client:
+            bot_log.info(f'User {telegram_id} is client')
             client_or_seller='client'
             profile = await db.execute(select(ClientProfile).filter(ClientProfile.client_id == client.id))
+            bot_log.info(f'Profile is query{profile}')
         elif seller:
+            bot_log.info(f'User {telegram_id} is seller')
             client_or_seller='seller'
             profile = await db.execute(select(SellerProfile).filter(SellerProfile.seller_id == seller.id))
-
-        profile = profile.scalar_one_or_none()
-        is_full_profile = profile_completeness(profile=profile)
-        profile_dict = profile_to_dict(profile=profile)
+            bot_log.info(f'Profile is query {profile}')
         if not profile:
-            raise Exception('User has client or seller but no profile')
+            return True, False
+        profile = profile.scalar_one_or_none()
+        bot_log.info(f'Profile is {profile}')
+        if not profile:
+            bot_log.critical('Profile not found but clien/seller is. Killing client or seller')
+            if client:
+                await db.delete(client)
+            if seller:
+                await db.delete(seller)
+            await db.commit()
+            return True, False
+
+
+        try:
+            is_full_profile = profile_completeness(profile=profile)
+            profile_dict = profile_to_dict(profile=profile)
+        except Exception as error:
+            bot_log.error(f'some error {error}')
+
 
         profile_data_base = {'language': profile.language,
                              'profile_data': profile_dict,
                              'client_or_seller': client_or_seller,
                              'profile_completeness': is_full_profile}
         return True, profile_data_base
-
-
-
 
 async def create_user(telegram_id, username, db: AsyncSession):
     async with db.begin():
@@ -90,6 +105,8 @@ def profile_completeness(profile: Union[ClientProfile, SellerProfile]) -> bool:
         else:
             bot_log.warning('SELLER profile_completeness is NOT full')
             return False
+    else:
+        raise Exception('Unknown profile type')
 
 def profile_to_dict(profile: Union[ClientProfile,SellerProfile]) -> dict:
     profile_dict = {

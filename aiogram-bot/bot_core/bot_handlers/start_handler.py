@@ -15,7 +15,6 @@ from ..utils.download_replies import BOT_REPLIES
 router = Router()
 
 async def delete_message(message: types.Message) -> None:
-
     await message.delete()
 
 
@@ -61,8 +60,8 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
     bot_log.warning('START HANDLER!')
     hello_text = "Проверяю пользователя"
     data_state = await state.get_data()
-
     await state.clear()
+
     if data_state:
         await state.update_data(data_state)
 
@@ -74,6 +73,7 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
     else:
         message: types.Message = message_or_callback
         message_answer = await message.answer(hello_text, reply_markup=ReplyKeyboardRemove())
+
     telegram_id = message.from_user.id
     username = message.from_user.username
     is_user, profile_dict = await check_user(db=db, telegram_id=telegram_id)

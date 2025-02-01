@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot_core.bot_db.db_handlers import add_message
 from bot_core.create_bot import bot_log
 from bot_core.utils.callback_actions import Calls, SpecialStates
+from bot_core.utils.download_replies import BOT_REPLIES
 from bot_core.utils.support_foo import back_to_main_menu_kb, delete_message_later
 
 
@@ -27,16 +28,17 @@ async def catch_message_handler(callback: types.CallbackQuery, state: FSMContext
 async def catch_messages_handler(message: types.Message, state: FSMContext, db:AsyncSession) -> None:
     """Обработчик получения сообщения"""
     state_dict = await state.get_data()
+    state_dict['kill_message'].append(message.message_id)
 
     bot_log.info(f'CATCH MESSAGE HANDLER {state_dict}')
     language = state_dict.get('language','rus')
     result = await add_message(db=db, message=message.text, telegram_id=message.from_user.id)
     if result:
-        result=await message.answer('🔸Ваше сообщение получено🔸', reply_markup=back_to_main_menu_kb(language))
+        result=await message.answer(text = BOT_REPLIES['catch_support_message_text'][language], reply_markup=back_to_main_menu_kb(language))
         await delete_message_later(telebot=result.bot, chat_id=result.chat.id, message_id=result.message_id,
                                    delay=10)
     else:
-        mes = await message.answer('❌Произошла ошибка❌',reply_markup=back_to_main_menu_kb(language))
+        mes = await message.answer('❌❌❌',reply_markup=back_to_main_menu_kb(language))
         state_dict['kill_message'].append(mes.message_id)
     await state.set_data(state_dict)
 

@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot_core.bot_db.db_handlers import create_profiles, check_user
 from bot_core.create_bot import bot_log
-from bot_core.utils.callback_actions import Calls, CollectDataStates, SpecialStates, CatchBattery, CatchCode
+from bot_core.utils.callback_actions import Calls, SpecialStates, CatchBattery, CatchCode
 from bot_core.utils.download_replies import BOT_REPLIES
 
 router = Router()
@@ -24,7 +24,7 @@ def create_menu_main_kb(language: str, client_or_seller: str) -> types.InlineKey
 
     if client_or_seller == 'client':
         builder.row(types.InlineKeyboardButton(text=BOT_REPLIES['register_battery_button'][language],
-                                               callback_data=Calls.REGISTRATION_BATTERY))
+                                               callback_data=Calls.REGISTRATION_BATTERY),faq_button)
     elif client_or_seller == 'seller':
         builder.row(types.InlineKeyboardButton(text=BOT_REPLIES['register_seller_button'][language],
                                                callback_data=Calls.REGISTRATION_CODE),faq_button)
@@ -34,8 +34,12 @@ def create_menu_main_kb(language: str, client_or_seller: str) -> types.InlineKey
                 types.InlineKeyboardButton(text=BOT_REPLIES['lottery_result_button'][language],
                                                            callback_data=Calls.LOTTERY_RESULTS))
 
-    builder.row(types.InlineKeyboardButton(text=BOT_REPLIES['help_button'][language], callback_data=Calls.CATCH_MESSAGE))
-
+    builder.row(
+        types.InlineKeyboardButton(
+            text=BOT_REPLIES['help_button'][language],
+            url='tg://resolve?domain=KainarOperator'
+        )
+    )
     return builder.as_markup()
 
 

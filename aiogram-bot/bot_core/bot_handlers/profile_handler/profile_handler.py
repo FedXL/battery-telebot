@@ -62,28 +62,28 @@ class KeyboardBuilder:
 
     def __create_client_full_kb(self):
         builder = InlineKeyboardBuilder()
-        builder.add(types.InlineKeyboardButton(text=self.button_full_name, callback_data=Calls.PROFILE.NAME_COLLECT))
-        builder.add(types.InlineKeyboardButton(text=self.button_phone, callback_data=Calls.PROFILE.PHONE_COLLECT))
-        builder.add(types.InlineKeyboardButton(text=self.button_email, callback_data=Calls.PROFILE.EMAIL_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_full_name, callback_data=Calls.PROFILE.NAME_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_phone, callback_data=Calls.PROFILE.PHONE_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_email, callback_data=Calls.PROFILE.EMAIL_COLLECT))
         builder.add(self.__language_choice_button())
         builder.add(types.InlineKeyboardButton(text=self.button_client_list,
-                                               callback_data=Calls.MY_SELLER_LIST))
+                                               callback_data=Calls.MY_BATTERY_LIST))
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
-        builder.adjust(2)
+        builder.adjust(1)
         keyboard = builder.as_markup()
         return keyboard
 
     def __create_seller_full_kb(self):
         builder = InlineKeyboardBuilder()
-        builder.add(types.InlineKeyboardButton(text=self.button_full_name, callback_data=Calls.PROFILE.NAME_COLLECT))
-        builder.add(types.InlineKeyboardButton(text=self.button_phone, callback_data=Calls.PROFILE.PHONE_COLLECT))
-        builder.add(types.InlineKeyboardButton(text=self.button_email, callback_data=Calls.PROFILE.EMAIL_COLLECT))
-        builder.add(types.InlineKeyboardButton(text=self.button_trade_point_name, callback_data=Calls.PROFILE.TRADING_POINT.NAME))
-        builder.add(types.InlineKeyboardButton(text=self.button_trade_point_address, callback_data=Calls.PROFILE.TRADING_POINT.ADDRESS))
+        # builder.add(types.InlineKeyboardButton(text=self.button_full_name, callback_data=Calls.PROFILE.NAME_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_phone, callback_data=Calls.PROFILE.PHONE_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_email, callback_data=Calls.PROFILE.EMAIL_COLLECT))
+        # builder.add(types.InlineKeyboardButton(text=self.button_trade_point_name, callback_data=Calls.PROFILE.TRADING_POINT.NAME))
+        # builder.add(types.InlineKeyboardButton(text=self.button_trade_point_address, callback_data=Calls.PROFILE.TRADING_POINT.ADDRESS))
         builder.add(self.__language_choice_button())
         builder.add(types.InlineKeyboardButton(text=self.button_seller_list,callback_data=Calls.MY_SELLER_LIST))
         builder.add(types.InlineKeyboardButton(text=self.button_comeback, callback_data=Calls.MAIN_MENU))
-        builder.adjust(2)
+        builder.adjust(1)
         keyboard = builder.as_markup()
         return keyboard
 
@@ -125,7 +125,7 @@ class TextBuilder:
                         f"Фамилия: <code>{second_name}</code>\n"
                         f"Отчество: <code>{patronymic}</code>\n"
                         f"Контактный телефон: <code>{phone_contact}</code>\n"
-                        f"email: <code>{email}</code>\n\n"
+                        f"Город: <code>{email}</code>\n\n"
                         )
             if seller_or_client=='seller':
                 text += (
@@ -141,7 +141,7 @@ class TextBuilder:
                         f"Тегі: <code>{second_name}</code>\n"
                         f"Әкесінің аты: <code>{patronymic}</code>\n"
                         f"Байланыс телефоны: <code>{phone_contact}</code>\n"
-                        f"Электронды пошта: <code>{email}</code>\n\n")
+                        f"Қала: <code>{email}</code>\n\n")
             if seller_or_client == 'seller':
                 text += (f"Сауда нүктесінің атауы: <code>{trading_point_name}</code>\n"
                         f"Сауда нүктесінің мекенжайы: <code>{trading_point}</code>\n\n\n")

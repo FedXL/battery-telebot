@@ -5,7 +5,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot_core.bot_db.db_handlers import save_profile_data_collected
-from bot_core.bot_handlers.profile_handler.profile_handler import profile_menu
 from bot_core.utils.callback_actions import Calls, SpecialStates
 
 router = Router()

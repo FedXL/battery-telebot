@@ -168,13 +168,8 @@ async def catch_survey(message: Message,state:FSMContext):
         builder.adjust(1)
         keyboard = builder.as_markup(resize_keyboard=True)
 
-
-
         text = BOT_REPLIES[next_chain_element][language]
-        if next_chain_element == 'email_collect':
-            result = await message.answer(text,reply_markup=keyboard)
-        else:
-            result = await message.answer(text, reply_markup=ReplyKeyboardRemove())
+        result = await message.answer(text, reply_markup=ReplyKeyboardRemove())
         state_dict['kill_messages'].append(result.message_id)
         state_dict['state_chain'] = chain
     bot_log.info(f"catch_survey {state_dict}")
