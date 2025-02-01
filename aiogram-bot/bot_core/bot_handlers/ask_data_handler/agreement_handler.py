@@ -34,11 +34,14 @@ async def agreement_handler_foo(callback: types.CallbackQuery, state: FSMContext
         text = BOT_REPLIES['agreement'][language]
     elif callback.data == Calls.RULES_WATCH:
         if client_or_seller == 'seller':
-            text = BOT_REPLIES['rules_seller_text'][language]
+            text = BOT_REPLIES['rules_seller_again_text'][language]
         elif client_or_seller == 'client':
-            text = BOT_REPLIES['rules_client_text'][language]
+            text = BOT_REPLIES['rules_client_again_text'][language]
     elif callback.data == Calls.GO_TO_FAQ:
-        text = BOT_REPLIES['faq_text'][language]
+        if client_or_seller == 'client':
+            text = BOT_REPLIES['faq_text'][language]
+        elif client_or_seller == 'seller':
+            text = BOT_REPLIES['faq_seller_text'][language]
     else:
         raise ValueError(f"Unknown callback data: {callback.data}")
 

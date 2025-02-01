@@ -10,6 +10,7 @@ async def main_aiogram_bot():
         from bot_core.bot_handlers.main_menu_handler import show_list_for_seller
         from bot_core.bot_handlers.main_menu_handler import battery_catch_handler
         from bot_core.bot_handlers.main_menu_handler import code_catch_handler
+        from bot_core.bot_handlers.main_menu_handler import lottery_result
         from bot_core.bot_handlers.profile_handler import profile_handler
         from bot_core.bot_handlers.profile_handler.survey import survey_handler
         from bot_core.bot_handlers.profile_handler.survey import change_language_handler
@@ -30,5 +31,6 @@ async def main_aiogram_bot():
         dp.include_router(code_catch_handler.router)
         dp.include_router(show_list_for_seller.router)
         dp.include_router(messanger_handler.router)
+        dp.include_router(lottery_result.router)
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)

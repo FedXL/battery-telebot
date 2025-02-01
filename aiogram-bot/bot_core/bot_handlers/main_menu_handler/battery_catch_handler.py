@@ -67,9 +67,9 @@ async def catch_image_and_ask_code(message: types.Message, state: FSMContext) ->
     bot_log.info(f'CATCH IMAGE INVOICE HANDLER {state_dict}')
     state_dict['kill_message'].append(message.message_id)
     if message.photo:
-        result = await message.answer(BOT_REPLIES['get_invoice'][language], reply_markup=ReplyKeyboardRemove())
+        ress = await message.answer(BOT_REPLIES['get_invoice'][language], reply_markup=ReplyKeyboardRemove())
         state_dict['photo'] = message.photo[-1].file_id
-        state_dict['kill_message'].append(result.message_id)
+        state_dict['kill_message'].append(ress.message_id)
     elif message.document :
         result = await message.answer(BOT_REPLIES['get_invoice'][language], reply_markup=ReplyKeyboardRemove())
         state_dict['photo'] = message.document.file_id
