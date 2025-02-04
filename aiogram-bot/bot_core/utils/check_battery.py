@@ -35,7 +35,7 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
     battery_number = battery_code[8:12]
     print(capacity, day, year, team, battery_number, sep="|")
     assert len(capacity + day + year + team + battery_number) == 11, ('Накосячил ты с кодом')
-    valid_two_digit_numbers = {'42', '50', '55', '60', '62', '64', '65', '66', '70', '75', '77', '90', '95', '00', '32',
+    valid_two_digit_numbers = {'42','45', '50', '55', '60', '62', '64', '65', '66', '70', '75', '77', '90', '95', '00', '32',
                                '40', '90', '10', '30'}
     if capacity not in valid_two_digit_numbers:
         print('Не валидная ёмкость аккумулятора')
@@ -46,7 +46,7 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
     if year not in ['3', '4', '5']:
         print(year,'Неправильный год')
         return False , 'Неправильный год'
-    if not (1 <= int(team) <= 31):
+    if not (1 <= int(team) <= 35):
         print(team,'Неправильный номер бригады')
         return False, 'Неправильный номер бригады'
     if not (1 <= int(battery_number) <= 999):

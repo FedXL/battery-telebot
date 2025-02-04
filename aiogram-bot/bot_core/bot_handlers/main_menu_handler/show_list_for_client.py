@@ -20,7 +20,7 @@ async def create_my_battery_list(callback: types.CallbackQuery,db: AsyncSession,
     await callback.answer('ok')
     language=await state.get_value('language')
     result=await get_battery_by_client_telegram_id(db, callback.from_user.id)
-    text = callback.from_user.username
+    text = callback.from_user.username if callback.from_user.username else 'No username'
     text += "\nСписок ваших аккумуляторов"
     if result:
         you_have_a_code = False
