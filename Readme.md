@@ -19,3 +19,4 @@
 - **Добавление покупок:** Каждый участник может добавить информацию о своей покупке аккумулятора.
 - **Проведение розыгрыша:** По завершению периода регистрации бот автоматически проводит розыгрыш среди участников.
 
+[![wakatime](https://wakatime.com/badge/github/FedXL/battery-telebot.svg)](https://wakatime.com/badge/github/FedXL/battery-telebot)
