@@ -19,14 +19,18 @@ async def lottery_result(callback: types.CallbackQuery, state: FSMContext) -> No
     if not kill_messages:
         state_dict['kill_message'] = []
     language = state_dict.get('language')
-    text = BOT_REPLIES['lottery_result_text'][language]
+    if callback.data == Calls.LOTTERY_RESULTS_CLIENTS:
+        text = BOT_REPLIES['lottery_result_clients'][language]
+    elif callback.data == Calls.LOTTERY_RESULTS_SELLERS:
+        text = BOT_REPLIES['lottery_result_sellers'][language]
     await callback.message.delete()
     res=await callback.message.answer(text, reply_markup=comeback_to_main_menu_kb(language=language))
-
 
     await state.set_data(state_dict)
 
 
 
 
-router.callback_query.register(lottery_result, F.data == Calls.LOTTERY_RESULTS, StateFilter(SpecialStates.messages_of))
+router.callback_query.register(lottery_result,
+                               F.data.in_([Calls.LOTTERY_RESULTS_CLIENTS, Calls.LOTTERY_RESULTS_SELLERS]),
+                               StateFilter(SpecialStates.messages_of))

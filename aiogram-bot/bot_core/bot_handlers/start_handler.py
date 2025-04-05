@@ -2,7 +2,6 @@ from typing import Union
 from aiogram import Router, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.methods import delete_message
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,13 +10,29 @@ from ..bot_db.db_handlers import check_user, create_user
 from ..create_bot import bot, bot_log, dp
 from ..utils.callback_actions import Calls, SpecialStates
 from ..utils.download_replies import BOT_REPLIES
+from ..utils.support_foo import delete_message_later
 
 router = Router()
 
-async def delete_message(message: types.Message) -> None:
-    await message.delete()
+# async def delete_message(message: types.Message) -> None:
+#     await message.delete()
 
+async def delete_message(message: types.Message, state: FSMContext) -> None:
+    """Киллер первых сообщений"""
+    state_dict = await state.get_data()
+    language = state_dict.get('language', 'rus')
+    bot_log.info(f'CATCH MESSAGE HANDLER {state_dict}')
 
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(
+            text=BOT_REPLIES['help_button'][language],
+            url='tg://resolve?domain=KainarOperator'
+        ))
+    mes = await message.answer(text=BOT_REPLIES['catch_support_message_text'][language], reply_markup=builder.as_markup())
+    await delete_message_later(telebot=mes.bot, chat_id=mes.chat.id, message_id=mes.message_id,
+                               delay=6)
+    await delete_message_later(telebot=message.bot, chat_id=message.chat.id, message_id=message.message_id,delay=2)
 
 def command_menu_kb() -> types.InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
@@ -91,11 +106,13 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
         await message_answer.delete()
         await main_menu(callback_or_message=message, state=state, db=db)
         return
+
     elif is_user:
         bot_log.info(f"User branch {is_user}")
     else:
         bot_log.info(f"Create new user branch {is_user}")
         new_user = await create_user(telegram_id, username, db)
+
     hello_text = context_for_hello(username)
     keyboard = command_menu_kb()
     await message_answer.answer(hello_text, reply_markup=keyboard)
@@ -106,4 +123,4 @@ async def start_handler(message_or_callback: Union[types.Message,types.CallbackQ
 
 router.callback_query.register(start_handler, F.data == Calls.START_MENU)
 router.message.register(start_handler, Command("start"))
-router.message.register(delete_message,StateFilter(SpecialStates.messages_of))
+router.message.register(delete_message, StateFilter(SpecialStates.messages_of))

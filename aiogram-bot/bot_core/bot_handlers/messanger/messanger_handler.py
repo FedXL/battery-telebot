@@ -8,9 +8,7 @@ from bot_core.utils.callback_actions import Calls, SpecialStates
 from bot_core.utils.download_replies import BOT_REPLIES
 from bot_core.utils.support_foo import back_to_main_menu_kb, delete_message_later
 
-
 router = Router()
-
 
 async def catch_message_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Обработчик получения сообщения"""
@@ -24,6 +22,20 @@ async def catch_message_handler(callback: types.CallbackQuery, state: FSMContext
     state_dict['kill_message'].append(mes.message_id)
     await state.set_state(SpecialStates.messanger)
     await state.set_data(state_dict)
+
+async def vacuum_cleaner(message: types.Message, state: FSMContext) -> None:
+    """Киллер первых сообщений"""
+    state_dict = await state.get_data()
+    language = state_dict.get('language','rus')
+    bot_log.info(f'CATCH MESSAGE HANDLER {state_dict}')
+    message_killer = state_dict.get('kill_message', None)
+    if not message_killer:
+        state_dict['kill_message'] = []
+    mes = await message.reply(text = BOT_REPLIES['catch_support_message_text'][language])
+    state_dict['kill_message'].append(mes.message_id)
+    state_dict['kill_message'].append(message.message_id)
+    await state.set_data(state_dict)
+
 
 async def catch_messages_handler(message: types.Message, state: FSMContext, db:AsyncSession) -> None:
     """Обработчик получения сообщения"""
@@ -43,5 +55,5 @@ async def catch_messages_handler(message: types.Message, state: FSMContext, db:A
     await state.set_data(state_dict)
 
 
-router.callback_query.register(catch_message_handler, F.data == Calls.CATCH_MESSAGE, StateFilter(SpecialStates.messages_of))
-router.message.register(catch_messages_handler, StateFilter(SpecialStates.messanger))
+# router.callback_query.register(catch_message_handler, F.data == Calls.CATCH_MESSAGE, StateFilter(SpecialStates.messages_of))
+router.message.register(vacuum_cleaner, StateFilter(SpecialStates.messages_of))

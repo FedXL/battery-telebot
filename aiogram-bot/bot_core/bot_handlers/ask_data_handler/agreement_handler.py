@@ -2,8 +2,10 @@ from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from bot_core.create_bot import bot_log
 from bot_core.utils.callback_actions import Calls, SpecialStates
 from bot_core.utils.download_replies import BOT_REPLIES
+
 
 router = Router()
 
@@ -27,6 +29,7 @@ async def agreement_handler_foo(callback: types.CallbackQuery, state: FSMContext
     """Обработчик согласия на обработку персональных данных."""
     state_dict = await state.get_data()
     await callback.answer('Ok')
+    bot_log.info(f"AGREEMENT HANDLER {callback.data}")
     language = state_dict['language']
     client_or_seller = state_dict['client_or_seller']
 

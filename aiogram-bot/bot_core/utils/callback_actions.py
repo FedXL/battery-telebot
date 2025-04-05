@@ -31,7 +31,8 @@ class Calls:
 
     MAIN_MENU = "mainmenu"
 
-    LOTTERY_RESULTS = "lottery_results"
+    LOTTERY_RESULTS_SELLERS = "lottery_results_for_seller"
+    LOTTERY_RESULTS_CLIENTS = "lottery_results_for_client"
     GO_TO_PROFILE = "go_to_profile"
     REGISTRATION_BATTERY = "registration_battery"
     REGISTRATION_CODE = 'registration_code'

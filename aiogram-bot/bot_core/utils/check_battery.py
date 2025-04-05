@@ -23,7 +23,6 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
         if first_pref not in ('E','C','С','Е'):
             print(f'Первый символ не E или C {first_pref}')
             return False , 'Первый символ не E или C'
-
         else:
             battery_code = battery_code[1:]
     else:
@@ -35,7 +34,7 @@ def valid_battery_code(battery_code: str) -> bool | tuple[bool, str] | tuple[dic
     battery_number = battery_code[8:12]
     print(capacity, day, year, team, battery_number, sep="|")
     assert len(capacity + day + year + team + battery_number) == 11, ('Накосячил ты с кодом')
-    valid_two_digit_numbers = {'42','45', '50', '55', '60', '62', '64', '65', '66', '70', '75', '77', '90', '95', '00', '32',
+    valid_two_digit_numbers = {'37','42','45', '50', '55', '60', '62', '64', '65', '66', '70', '75', '77', '90', '95', '00', '32',
                                '40', '90', '10', '30'}
     if capacity not in valid_two_digit_numbers:
         print('Не валидная ёмкость аккумулятора')

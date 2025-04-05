@@ -13,15 +13,16 @@ router = Router()
 def create_menu_main_kb(language: str, client_or_seller: str) -> types.InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
-
+    if language == 'rus':
+        registration = 'Регистрация'
+    else:
+        registration = 'Тіркеу'
     builder.row(
-        types.InlineKeyboardButton(text='Регистрация', callback_data=Calls.PROFILE.START_REGISTRATION),
+        types.InlineKeyboardButton(text=registration, callback_data=Calls.PROFILE.START_REGISTRATION),
         types.InlineKeyboardButton(text=BOT_REPLIES['rules_watch_button'][language], callback_data=Calls.RULES_WATCH)
     )
-
     faq_button = types.InlineKeyboardButton(text=BOT_REPLIES['faq_button'][language],
                                                callback_data=Calls.GO_TO_FAQ)
-
     if client_or_seller == 'client':
         builder.row(types.InlineKeyboardButton(text=BOT_REPLIES['register_battery_button'][language],
                                                callback_data=Calls.REGISTRATION_BATTERY),faq_button)
@@ -30,9 +31,14 @@ def create_menu_main_kb(language: str, client_or_seller: str) -> types.InlineKey
                                                callback_data=Calls.REGISTRATION_CODE),faq_button)
 
     profile_button = types.InlineKeyboardButton(text=BOT_REPLIES['profile_button'][language],callback_data=Calls.GO_TO_PROFILE)
-    builder.row(profile_button,
+    if client_or_seller == 'client':
+        builder.row(profile_button,
                 types.InlineKeyboardButton(text=BOT_REPLIES['lottery_result_button'][language],
-                                                           callback_data=Calls.LOTTERY_RESULTS))
+                                                           callback_data=Calls.LOTTERY_RESULTS_CLIENTS))
+    elif client_or_seller == 'seller':
+        builder.row(profile_button,
+                types.InlineKeyboardButton(text=BOT_REPLIES['lottery_result_button'][language],
+                                                           callback_data=Calls.LOTTERY_RESULTS_SELLERS))
 
     builder.row(
         types.InlineKeyboardButton(
@@ -96,4 +102,6 @@ async def main_menu(callback_or_message: types.CallbackQuery | types.Message, st
 
 router.callback_query.register(main_menu, F.data.in_([Calls.CLIENT_CHOICE, Calls.SELLER_CHOICE, Calls.MAIN_MENU]), StateFilter(SpecialStates.messages_of))
 router.message.register(main_menu, F.text.in_([BOT_REPLIES['to_main_menu_from_battery']['rus'],BOT_REPLIES['to_main_menu_from_battery']['kaz']]),
-                        StateFilter(CatchBattery.catch_battery,SpecialStates.messanger,CatchCode.catch_code))
+                        StateFilter(CatchBattery.catch_battery,
+                                    SpecialStates.messanger,
+                                    CatchCode.catch_code))

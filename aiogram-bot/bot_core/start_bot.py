@@ -30,7 +30,7 @@ async def main_aiogram_bot():
         dp.include_router(show_list_for_client.router)
         dp.include_router(code_catch_handler.router)
         dp.include_router(show_list_for_seller.router)
-        dp.include_router(messanger_handler.router)
         dp.include_router(lottery_result.router)
+        # dp.include_router(messanger_handler.router)
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
